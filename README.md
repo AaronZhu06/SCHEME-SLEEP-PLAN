@@ -3,7 +3,7 @@
 每天睡前花几分钟，用时间块把明天排好；第二天随手打分，晚上收尾时把没做完的顺延。
 一个网页文件，装到 iPhone 主屏幕后可以离线使用，数据只存在手机里。
 
-网址：<https://aaronzhu06.github.io/scheme-sleep-plan/>
+网址：<https://aaronzhu06.github.io/SCHEME-SLEEP-PLAN/>（在仓库的 Settings → Pages 里开启后可用）
 
 ## 装到 iPhone 上
 
