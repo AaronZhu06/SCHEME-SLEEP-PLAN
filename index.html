@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="睡前日程">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#111317">
+<title>睡前日程</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+/* ---------- 颜色（默认深色，睡前不刺眼） ---------- */
+:root{
+  color-scheme:dark;
+  --bg:#111317;--surface:#1b1e24;--surface2:#252932;--line:#30353f;
+  --text:#eceef2;--text2:#b9bec9;--muted:#8a90a0;
+  --accent:#7aa2ff;--accent-ink:#0b1020;--danger:#ff6b6b;--ok:#4cc38a;--warn:#f0b43c;
+  --c0:#3987e5;--c1:#d95926;--c2:#199e70;--c3:#c98500;--c4:#d55181;--c5:#008300;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --tabh:56px;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f4f5f7;--surface:#ffffff;--surface2:#eef0f3;--line:#dde0e6;
+  --text:#16181d;--text2:#454a55;--muted:#6c7280;
+  --accent:#2a63d6;--accent-ink:#ffffff;--danger:#d93636;--ok:#1d8a52;--warn:#b77800;
+  --c0:#2a78d6;--c1:#eb6834;--c2:#1baf7a;--c3:#eda100;--c4:#e87ba4;--c5:#008300;
+  --shadow:0 10px 30px rgba(20,25,40,.18);
+}
+@media (prefers-color-scheme:light){
+  :root[data-theme="auto"]{
+    color-scheme:light;
+    --bg:#f4f5f7;--surface:#ffffff;--surface2:#eef0f3;--line:#dde0e6;
+    --text:#16181d;--text2:#454a55;--muted:#6c7280;
+    --accent:#2a63d6;--accent-ink:#ffffff;--danger:#d93636;--ok:#1d8a52;--warn:#b77800;
+    --c0:#2a78d6;--c1:#eb6834;--c2:#1baf7a;--c3:#eda100;--c4:#e87ba4;--c5:#008300;
+    --shadow:0 10px 30px rgba(20,25,40,.18);
+  }
+}
+
+/* ---------- 基础 ---------- */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);min-height:100vh;
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+button:disabled{opacity:.45;cursor:default}
+input,textarea,select{font:inherit;font-size:16px;color:var(--text)}
+svg{display:block}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+html.lock,html.lock body{overflow:hidden}
+.nojs{padding:32px 20px;max-width:520px;margin:0 auto;line-height:1.7}
+
+/* ---------- 顶栏 ---------- */
+header{position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:calc(env(safe-area-inset-top) + 8px) 8px 8px 16px;display:flex;align-items:center;gap:4px;
+  border-bottom:1px solid transparent}
+header.scrolled{border-bottom-color:var(--line)}
+.h-main{flex:1;min-width:0}
+.h-title{font-size:22px;font-weight:700;display:flex;align-items:baseline;gap:8px;white-space:nowrap;overflow:hidden}
+.h-date{font-size:15px;font-weight:500;color:var(--text2)}
+.h-sub{font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:12px;color:var(--text2)}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn:active{background:var(--surface2)}
+.icon-btn.sm{width:36px;height:36px}
+.icon-btn.sm svg{width:18px;height:18px}
+header .back{margin-left:-12px}
+
+main{padding:4px 12px calc(var(--tabh) + 96px + env(safe-area-inset-bottom))}
+
+/* ---------- 底部标签 ---------- */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;height:var(--tabh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:11px;color:var(--muted);position:relative;text-align:center}
+.tabs button svg{width:24px;height:24px}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.badge{position:absolute;top:5px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--danger);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+.badge:empty{display:none}
+.fab{position:fixed;right:16px;bottom:calc(var(--tabh) + 16px + env(safe-area-inset-bottom));z-index:25;
+  width:56px;height:56px;border-radius:28px;background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;box-shadow:var(--shadow)}
+.fab svg{width:28px;height:28px}
+.fab[hidden]{display:none}
+
+/* ---------- 工具条、提示条 ---------- */
+.toolbar{display:flex;gap:8px;margin:2px 0 10px;overflow-x:auto;scrollbar-width:none}
+.toolbar::-webkit-scrollbar{display:none}
+.pill{min-height:40px;padding:0 14px;border-radius:20px;background:var(--surface);border:1px solid var(--line);
+  font-size:14px;color:var(--text2);white-space:nowrap;display:inline-flex;align-items:center;gap:6px;flex:none}
+.pill svg{width:16px;height:16px}
+.pill.sm{min-height:36px;padding:0 12px;font-size:13px}
+.pill:active{background:var(--surface2)}
+.banner{display:flex;align-items:center;gap:12px;width:100%;padding:12px 12px 12px 14px;margin:0 0 10px;
+  border-radius:14px;background:var(--surface);border:1px solid var(--line);text-align:left}
+.banner > div{flex:1;min-width:0}
+.banner b{display:block;font-size:15px}
+.banner span{display:block;font-size:13px;color:var(--muted);line-height:1.4}
+.banner .b-ico{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;
+  background:var(--surface2);color:var(--accent)}
+.banner .b-ico svg{width:18px;height:18px}
+.banner .chev{font-style:normal;color:var(--muted);font-size:20px}
+.banner.hot{border-color:var(--accent)}
+.banner.bad{border-color:var(--danger)}
+.banner.bad b{color:var(--danger)}
+
+/* ---------- 时间轴 ---------- */
+.tl{display:flex;flex-direction:column;gap:6px}
+.blk{display:flex;gap:8px;align-items:stretch;width:100%;cursor:pointer;outline:none}
+.tcol{width:44px;flex:none;display:flex;flex-direction:column;justify-content:space-between;
+  font-size:12px;color:var(--muted);padding:7px 0 6px;font-variant-numeric:tabular-nums}
+.tcol .s{color:var(--text2);font-weight:600;font-size:13px}
+.card{flex:1;min-width:0;position:relative;overflow:hidden;border-radius:12px;background:var(--surface);
+  border:1px solid var(--line);padding:8px 10px 8px 15px}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.card .fill{position:absolute;left:0;top:0;bottom:0;background:var(--c);opacity:.2;pointer-events:none}
+.card .in{position:relative}
+.r1{display:flex;align-items:baseline;gap:8px}
+.ti{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.du{font-size:12px;color:var(--muted);flex:none}
+.no{font-size:13px;color:var(--text2);margin-top:1px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.me{font-size:12px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.me .score{font-weight:600;color:var(--text2)}
+.me .score.full{color:var(--ok)}
+.me .score.zero,.me .bad{color:var(--danger);font-weight:600}
+.me .todo{color:var(--accent);font-weight:600}
+.me .nowtag{color:var(--accent);font-weight:600}
+.me .from{border:1px solid var(--line);border-radius:6px;padding:0 5px}
+.blk:active .card{background:var(--surface2)}
+.card.now{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.card.ov{border-color:var(--danger)}
+.gap{display:flex;gap:8px;align-items:center;width:100%;cursor:pointer}
+.gap .tcol{padding:0;justify-content:center}
+.gl{flex:1;min-height:36px;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:13px;color:var(--muted);
+  display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gap.has-now .gl{border-color:var(--danger);color:var(--danger)}
+.gap:active .gl{background:var(--surface)}
+.nowline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--danger);font-weight:700;padding-left:2px}
+.nowline::after{content:"";flex:1;height:2px;background:var(--danger);border-radius:1px}
+.addrow{display:block;width:100%;margin-top:10px;min-height:44px;border-radius:12px;border:1px dashed var(--line);
+  color:var(--muted);font-size:14px;text-align:center}
+.addrow:active{background:var(--surface)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:24px 16px;text-align:center;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--text);font-size:17px;margin-bottom:6px}
+.empty .acts{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.empty .acts .btn{flex:0 1 auto;padding:0 18px}
+.notebox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 10px;font-size:14px;color:var(--text2)}
+
+/* ---------- 弹出面板 ---------- */
+.sheet-wrap{position:fixed;inset:0;z-index:50}
+.sheet-wrap[hidden]{display:none}
+.backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;transition:opacity .2s;touch-action:none}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:92vh;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;background:var(--surface);border-radius:18px 18px 0 0;
+  padding:6px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .24s ease-out;box-shadow:var(--shadow)}
+.sheet-wrap.open .backdrop{opacity:1}
+.sheet-wrap.open .sheet{transform:none}
+@media (min-width:600px){.sheet{left:50%;right:auto;width:560px;margin-left:-280px}}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 6px}
+.sh-h{display:flex;align-items:center;gap:8px;margin:0 -8px 6px 0;min-height:44px}
+.sh-h h2{flex:1;font-size:18px;margin:0;min-width:0}
+.sh-h h2 small{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+.sh-t{flex:1;min-width:0}
+.sh-t h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-h.bar{margin:0 -8px 6px}
+.sh-h.bar h2{text-align:center}
+.txt-btn{min-width:56px;height:44px;padding:0 8px;color:var(--accent);font-size:16px}
+.txt-btn.strong{font-weight:700}
+.sub-lab{font-size:13px;color:var(--muted);margin:14px 0 6px}
+.field{display:block;margin:14px 0 0}
+.field > .lab{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);padding:0 12px;outline:none;-webkit-appearance:none;appearance:none}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{padding:10px 12px;resize:none;line-height:1.4;display:block}
+input[type="date"].inp{display:block;min-width:0;line-height:44px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chip{min-height:38px;padding:0 13px;border-radius:19px;background:var(--surface2);border:1px solid var(--line);font-size:14px;
+  display:inline-flex;align-items:center;gap:6px;color:var(--text2);white-space:nowrap;flex:none}
+.chip .dot,.dot{width:9px;height:9px;border-radius:5px;background:var(--c);flex:none;display:inline-block}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] .dot{box-shadow:0 0 0 2px var(--accent-ink)}
+.chips.score{flex-wrap:nowrap}
+.chips.score .chip{flex:1;justify-content:center;padding:0;min-height:44px}
+.chips.score.big .chip{min-height:52px;font-size:16px;font-weight:600}
+.btns{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;min-height:48px;border-radius:14px;background:var(--surface2);border:1px solid var(--line);font-size:16px;font-weight:600;text-align:center;padding:0 12px}
+.btn:active{filter:brightness(1.15)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);flex:0 0 auto;padding:0 18px}
+.btn.wide{width:100%;display:block}
+.btn.sm{min-height:40px;font-size:14px;flex:0 0 auto;padding:0 14px}
+.stack{display:flex;flex-direction:column;gap:8px}
+.chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:15px;color:var(--text2);min-height:32px}
+.chk input{width:22px;height:22px;accent-color:var(--accent);margin:0}
+
+/* 时间刻度尺 */
+.timebox{text-align:center;margin-top:14px}
+.timebox .big{font-size:30px;font-weight:700;letter-spacing:.5px}
+.timebox .warn{font-size:13px;color:var(--danger);min-height:19px}
+.rl{margin-top:8px}
+.rl-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rl-h .lab{font-size:13px;color:var(--muted);flex:1}
+.rl-h .val{font-size:17px;font-weight:600;min-width:84px;text-align:center}
+.step{width:44px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:20px;line-height:1;text-align:center}
+.step:active{background:var(--line)}
+.ruler{position:relative;height:62px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);overflow:hidden;
+  touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:grab;outline:none}
+.ruler:focus-visible{border-color:var(--accent)}
+.ruler .track{position:absolute;top:0;bottom:0;left:0;will-change:transform}
+.ruler .ticks{position:absolute;left:0;right:0;bottom:0;height:22px;
+  background-image:repeating-linear-gradient(to right,var(--text2) 0 1.5px,transparent 1.5px var(--major)),
+                   repeating-linear-gradient(to right,var(--muted) 0 1px,transparent 1px var(--minor));
+  background-size:100% 20px,100% 10px;background-position:0 100%,0 100%;background-repeat:no-repeat;opacity:.8}
+.ruler .lbl{position:absolute;top:5px;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ruler .band{position:absolute;top:22px;height:10px;border-radius:3px;background:var(--c);opacity:.75}
+.ruler .off{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(140,140,150,.18) 6px 9px)}
+.ruler .self{position:absolute;left:50%;top:19px;height:16px;border-radius:4px;background:var(--accent);opacity:.35;pointer-events:none}
+.ruler .center{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none}
+.ruler .center::before{content:"";position:absolute;top:0;left:-5px;border:6px solid transparent;border-top-color:var(--accent)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+
+/* 收尾 */
+.wrow{padding:12px 0;border-top:1px solid var(--line)}
+.wrow:first-of-type{border-top:0}
+.wt{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.wt b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wt span{font-size:12px;color:var(--muted)}
+.carry{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:13px;color:var(--muted)}
+.carry .chip{min-height:34px;font-size:13px}
+
+/* 待办池 */
+.padd{display:flex;gap:8px}
+.padd .btn{flex:0 0 auto;padding:0 18px}
+.pdue{display:flex;align-items:center;gap:8px;margin:8px 0 14px;font-size:13px;color:var(--muted)}
+.pdue .inp{flex:1;min-height:40px}
+.pdue input[type="date"].inp{line-height:40px}
+.plist{display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px 8px 4px 4px;min-height:56px}
+.prow .ck{width:44px;height:44px;flex:none;display:grid;place-items:center}
+.prow .ck::before{content:"";width:22px;height:22px;border-radius:11px;border:2px solid var(--c);grid-area:1/1}
+.prow .ck svg{width:14px;height:14px;grid-area:1/1;color:var(--accent-ink)}
+.prow.done .ck::before{background:var(--accent);border-color:var(--accent)}
+.prow .pt{flex:1;min-width:0;padding:6px 0;cursor:pointer}
+.prow .ptt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow.done .ptt{color:var(--muted);text-decoration:line-through}
+.prow .pm{font-size:12px;color:var(--muted)}
+.pm .bad{color:var(--danger);font-weight:600}
+.pm .warn{color:var(--warn);font-weight:600}
+details.pdone{margin-top:16px}
+details.pdone summary{font-size:14px;color:var(--muted);padding:10px 0;cursor:pointer}
+details.pdone .btn{margin-top:10px}
+
+/* 复盘 */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile .tv{font-size:26px;font-weight:700}
+.tile .tl2{font-size:12px;color:var(--muted);line-height:1.35}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.ph{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.ph b{font-size:15px}
+.ph span{font-size:12px;color:var(--muted)}
+.ph.lst{margin:16px 2px 8px}
+.chart{min-height:150px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .base{stroke:var(--muted);stroke-width:1;opacity:.7}
+.chart .ax{fill:var(--muted);font-size:10px;font-family:inherit}
+.chart .val{fill:var(--text2);font-size:11px;font-weight:600;font-family:inherit}
+.chart .bar{fill:var(--accent)}
+.chart.has-sel .bar{opacity:.4}
+.chart.has-sel .bar.sel{opacity:1}
+.chart .hit{cursor:pointer}
+.tip{font-size:13px;min-height:20px;margin-top:4px;color:var(--text2)}
+.link{color:var(--accent);font-weight:600;font-size:13px;padding:2px 0}
+.cbars{display:flex;flex-direction:column;gap:8px}
+.cbar{display:flex;align-items:center;gap:8px;font-size:13px}
+.cbar .cn{width:78px;flex:none;display:flex;align-items:center;gap:6px;color:var(--text2);white-space:nowrap;overflow:hidden}
+.cbar .ct{flex:1;height:10px;position:relative}
+.cbar .ct i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--c);min-width:2px}
+.cbar .cv{width:64px;flex:none;text-align:right;color:var(--muted)}
+.days{display:flex;flex-direction:column;gap:8px}
+.dayrow{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer}
+.dayrow:active{background:var(--surface2)}
+.dr1{display:flex;align-items:baseline;gap:8px}
+.dr1 b{font-size:15px}
+.dr1 .tag{font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:0 5px}
+.dr1 .rate{margin-left:auto;font-weight:700;font-size:16px}
+.dbar{display:flex;gap:2px;height:8px;margin:8px 0 6px;border-radius:4px;overflow:hidden}
+.dbar i{background:var(--c);display:block}
+.dr2{font-size:12px;color:var(--muted)}
+.drv{font-size:13px;color:var(--text2);margin-top:4px}
+
+/* 设置 */
+.sec{border-top:1px solid var(--line);padding:14px 0 6px}
+.sec:first-of-type{border-top:0;padding-top:4px}
+.sec-h{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:.5px}
+.sec-h span{font-weight:400;margin-left:6px}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:15px;flex-wrap:wrap}
+.row > span{color:var(--text2)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg .chip{min-height:36px}
+.sel{width:auto;min-height:40px;padding:0 30px 0 12px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a90a0' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center}
+.row.cat .inp{flex:1;min-height:40px}
+.clr{width:48px;height:40px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--surface2);flex:none;-webkit-appearance:none;appearance:none}
+.clr::-webkit-color-swatch-wrapper{padding:5px}
+.clr::-webkit-color-swatch{border:none;border-radius:6px}
+.sw{justify-content:space-between;flex-wrap:nowrap;min-height:44px}
+.sw input{-webkit-appearance:none;appearance:none;width:51px;height:31px;border-radius:16px;background:var(--line);position:relative;flex:none;margin:0;transition:background .2s;cursor:pointer}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.sw input:checked{background:var(--ok)}
+.sw input:checked::after{transform:translateX(20px)}
+.plist2{display:flex;flex-direction:column}
+.prow2{display:flex;align-items:center;gap:8px;min-height:40px;font-size:15px}
+.prow2 .pn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow2 .pd{font-size:13px;color:var(--muted)}
+.fine{font-size:12px;color:var(--muted);margin:4px 0 10px;line-height:1.5}
+.fine.c{text-align:center;margin-top:16px}
+
+/* 提示 */
+.toast{position:fixed;left:16px;right:16px;bottom:calc(var(--tabh) + 84px + env(safe-area-inset-bottom));z-index:60;
+  display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:14px;background:var(--text);color:var(--bg);
+  font-size:14px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
+.toast.show{opacity:1;transform:none;pointer-events:auto}
+.toast[hidden]{display:none}
+.toast span{flex:1}
+.toast button{color:var(--accent);font-weight:700;min-height:36px;padding:0 10px;filter:saturate(1.2)}
+:root[data-theme="dark"] .toast button,:root:not([data-theme="light"]) .toast button{color:#2a63d6}
+@media (prefers-color-scheme:light){:root[data-theme="auto"] .toast button{color:#7aa2ff}}
+:root[data-theme="light"] .toast button{color:#7aa2ff}
+</style>
+</head>
+<body>
+<div id="nojs" class="nojs">
+  <h1 style="font-size:20px">睡前日程</h1>
+  <p>网页的脚本没有运行，所以这里只能看到这段文字。</p>
+  <p>iPhone「文件」App 里的预览不运行脚本。请用 Safari 打开网页地址，再点底部的分享按钮，选「添加到主屏幕」，以后从主屏幕图标打开。</p>
+</div>
+<header id="top"></header>
+<main id="main"></main>
+<button class="fab" id="fab" data-a="fab" aria-label="加一块" hidden></button>
+<nav class="tabs" id="tabs"></nav>
+<div class="sheet-wrap" id="sheetWrap" hidden>
+  <div class="backdrop" data-a="close"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true"></section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ======================= 小工具 ======================= */
+var KEY = 'sleep-plan-v1';
+var BOUNDARY_H = 4;            // 凌晨 4 点前仍算前一天
+var SP = 12;                   // 刻度尺上每一格的像素宽度
+function $(s, r) { return (r || document).querySelector(s); }
+function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function trunc(s, n) { s = String(s); return s.length > n ? s.slice(0, n) + '…' : s; }
+var WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+function fmt(m) { m = Math.round(m); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+function durLabel(m) {
+  m = Math.round(m);
+  if (m < 60) return m + '分';
+  return m % 60 ? Math.floor(m / 60) + '小时' + (m % 60) + '分' : (m / 60) + '小时';
+}
+function hours(m) { return String(Math.round(m / 6) / 10); }
+function pct(r) { return Math.round(r * 100) + '%'; }
+function dkey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function parseKey(k) { var p = k.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function addDays(k, n) { var d = parseKey(k); d.setDate(d.getDate() + n); return dkey(d); }
+function diffDays(a, b) { return Math.round((parseKey(b) - parseKey(a)) / 864e5); }
+function isKey(k) { return typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k); }
+function today() { var d = new Date(); if (d.getHours() < BOUNDARY_H) d.setDate(d.getDate() - 1); return dkey(d); }
+function tomorrow() { return addDays(today(), 1); }
+function nowMin() { var d = new Date(); var m = d.getHours() * 60 + d.getMinutes(); return d.getHours() < BOUNDARY_H ? m + 1440 : m; }
+function dayLabel(k) { var d = parseKey(k); return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WD[d.getDay()]; }
+function shortLabel(k) { var d = parseKey(k); return (d.getMonth() + 1) + '/' + d.getDate(); }
+function byStart(a, b) { return a.start - b.start || a.end - b.end; }
+function isIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function isStandalone() { return window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); }
+
+function svgI(p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>'; }
+var ICON = {
+  sun: svgI('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  moon: svgI('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'),
+  list: svgI('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/>'),
+  chart: svgI('<path d="M5 20V11M11 20V5M17 20v-6M3 20h18"/>'),
+  set: svgI('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
+  plus: svgI('<path d="M12 5v14M5 12h14"/>'),
+  x: svgI('<path d="M6 6l12 12M18 6L6 18"/>'),
+  check: svgI('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  copy: svgI('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  trash: svgI('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+  back: svgI('<path d="M15 5l-7 7 7 7"/>'),
+  share: svgI('<path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>'),
+  save: svgI('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+  warn: svgI('<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.5"/>')
+};
+
+/* ======================= 数据 ======================= */
+var DEFAULT_CATS = [
+  { id: 'class', name: '上课/实验' },
+  { id: 'hw', name: '作业/报告' },
+  { id: 'work', name: '工作' },
+  { id: 'sport', name: '运动' },
+  { id: 'life', name: '生活' },
+  { id: 'fun', name: '娱乐' }
+];
+var CAT_IDS = DEFAULT_CATS.map(function (c) { return c.id; });
+var DEFAULT_PRESETS = [
+  { title: '洗漱', cat: 'life', dur: 10 },
+  { title: '早饭', cat: 'life', dur: 20 },
+  { title: '午饭', cat: 'life', dur: 40 },
+  { title: '晚饭', cat: 'life', dur: 60 },
+  { title: '洗澡', cat: 'life', dur: 30 },
+  { title: '洗衣服', cat: 'life', dur: 45 },
+  { title: '上课', cat: 'class', dur: 90 },
+  { title: '写作业', cat: 'hw', dur: 60 },
+  { title: '运动', cat: 'sport', dur: 60 },
+  { title: '次日日程安排', cat: 'life', dur: 10 }
+];
+var DEF_SETTINGS = { unit: 5, dayStart: 360, dayEnd: 1440, wake: 420, planHour: 21, theme: 'dark', weighted: true, backupRemind: true };
+// 按标题猜分类（顺序有讲究：先认「报告」「作业」，再认「课」「实验」）
+var CAT_RULES = [
+  ['hw', ['作业', '报告', '预习', '复习', '抄写', '学习资料', '论文', '笔记', '背单词', '刷题', '习题', '整理资料']],
+  ['work', ['爱心屋', '上班', '加班', '开会', '会议', '进货', '报表', '价目', '兼职', '值班', '工作']],
+  ['sport', ['打卡', '跑步', '球', '健身', '游泳', '桨板', '体育', '运动', '锻炼', '骑行', '瑜伽']],
+  ['class', ['课', '实验', '讲座', '考试', '概率', '高数', '电工', '化学', '力学', '物理', '英语', '管理']],
+  ['fun', ['游戏', '电影', '追剧', '娱乐', '看剧', '动漫', '刷视频']],
+  ['life', ['饭', '食堂', '洗', '睡', '快递', '收拾', '打扫', '购物', '日程', '外卖', '超市', '理发']]
+];
+function guessCat(t) {
+  t = String(t || '');
+  for (var i = 0; i < CAT_RULES.length; i++) {
+    if (CAT_RULES[i][1].some(function (k) { return t.indexOf(k) >= 0; })) return CAT_RULES[i][0];
+  }
+  return null;
+}
+
+function defaults() {
+  return {
+    v: 1,
+    settings: Object.assign({}, DEF_SETTINGS),
+    cats: DEFAULT_CATS.map(function (c) { return { id: c.id, name: c.name, color: null }; }),
+    presets: DEFAULT_PRESETS.map(function (p) { return Object.assign({}, p); }),
+    days: {},
+    pool: [],
+    meta: { created: Date.now(), lastBackup: null, hintOff: false }
+  };
+}
+function normBlock(b) {
+  if (!b || typeof b !== 'object') return null;
+  var s = Math.round(Number(b.start)), e = Math.round(Number(b.end));
+  if (!isFinite(s) || !isFinite(e)) return null;
+  s = clamp(s, 0, 1435);
+  e = clamp(e, s + 1, 1440);
+  var title = String(b.title == null ? '' : b.title).trim().slice(0, 100);
+  if (!title) return null;
+  var done = (b.done === null || b.done === undefined || b.done === '') ? null : clamp(Number(b.done), 0, 1);
+  if (done !== null && isNaN(done)) done = null;
+  var o = { id: (typeof b.id === 'string' && b.id) ? b.id : uid(), start: s, end: e, title: title,
+    cat: CAT_IDS.indexOf(b.cat) >= 0 ? b.cat : (guessCat(title) || 'life'),
+    note: String(b.note == null ? '' : b.note).slice(0, 500), done: done };
+  if (b.carry === 'next' || b.carry === 'pool' || b.carry === 'drop') o.carry = b.carry;
+  if (b.carryDone) o.carryDone = true;
+  if (isKey(b.from)) { o.from = b.from; if (b.fromDone != null) o.fromDone = clamp(Number(b.fromDone) || 0, 0, 1); }
+  return o;
+}
+function normDay(d) {
+  if (!d || typeof d !== 'object') return null;
+  var blocks = Array.isArray(d.blocks) ? d.blocks.map(normBlock).filter(Boolean) : [];
+  blocks.sort(byStart);
+  var o = { blocks: blocks, review: String(d.review == null ? '' : d.review).slice(0, 1000) };
+  if (d.wrapped) o.wrapped = true;
+  return o;
+}
+function normPool(p) {
+  if (!p || typeof p !== 'object') return null;
+  var t = String(p.t == null ? '' : p.t).trim().slice(0, 100);
+  if (!t) return null;
+  return { id: (typeof p.id === 'string' && p.id) ? p.id : uid(), t: t, due: isKey(p.due) ? p.due : '', done: !!p.done,
+    cat: CAT_IDS.indexOf(p.cat) >= 0 ? p.cat : null, note: String(p.note == null ? '' : p.note).slice(0, 500),
+    created: Number(p.created) || Date.now(), doneAt: Number(p.doneAt) || null, from: isKey(p.from) ? p.from : '' };
+}
+function normPreset(p) {
+  if (!p || typeof p !== 'object') return null;
+  var title = String(p.title == null ? '' : p.title).trim().slice(0, 40);
+  if (!title) return null;
+  return { title: title, cat: CAT_IDS.indexOf(p.cat) >= 0 ? p.cat : (guessCat(title) || 'life'), dur: clamp(Math.round(Number(p.dur) || 30), 5, 480) };
+}
+function normSettings(s) {
+  var o = Object.assign({}, DEF_SETTINGS);
+  if (!s || typeof s !== 'object') return o;
+  if ([5, 10, 15, 30].indexOf(+s.unit) >= 0) o.unit = +s.unit;
+  if (+s.dayStart >= 240 && +s.dayStart <= 600 && +s.dayStart % 60 === 0) o.dayStart = +s.dayStart;
+  if (+s.dayEnd >= 1200 && +s.dayEnd <= 1440 && +s.dayEnd % 60 === 0) o.dayEnd = +s.dayEnd;
+  if (+s.wake >= 0 && +s.wake <= 1440) o.wake = Math.round(+s.wake);
+  if (+s.planHour >= 12 && +s.planHour <= 23) o.planHour = Math.round(+s.planHour);
+  if (['dark', 'light', 'auto'].indexOf(s.theme) >= 0) o.theme = s.theme;
+  o.weighted = s.weighted !== false;
+  o.backupRemind = s.backupRemind !== false;
+  o.wake = clamp(o.wake, o.dayStart, o.dayEnd - 60);
+  return o;
+}
+function normCats(arr) {
+  return DEFAULT_CATS.map(function (c) {
+    var x = (arr || []).filter(function (y) { return y && y.id === c.id; })[0] || {};
+    return { id: c.id, name: String(x.name || c.name).trim().slice(0, 8) || c.name,
+      color: /^#[0-9a-f]{6}$/i.test(x.color || '') ? x.color.toLowerCase() : null };
+  });
+}
+
+var S;
+var storageOK = true;
+function load() {
+  try { localStorage.setItem('__sp_t', '1'); localStorage.removeItem('__sp_t'); } catch (e) { storageOK = false; }
+  S = defaults();
+  var raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
+  if (!raw) return;
+  try {
+    var d = JSON.parse(raw);
+    if (d.settings) S.settings = normSettings(d.settings);
+    if (Array.isArray(d.cats)) S.cats = normCats(d.cats);
+    if (Array.isArray(d.presets)) S.presets = d.presets.map(normPreset).filter(Boolean);
+    if (d.days && typeof d.days === 'object') {
+      Object.keys(d.days).forEach(function (k) { if (isKey(k)) { var day = normDay(d.days[k]); if (day) S.days[k] = day; } });
+    }
+    if (Array.isArray(d.pool)) S.pool = d.pool.map(normPool).filter(Boolean);
+    if (d.meta && typeof d.meta === 'object') S.meta = Object.assign(S.meta, d.meta);
+  } catch (e) { console.warn('读取数据失败', e); }
+}
+var saveWarned = false;
+function save() {
+  Object.keys(S.days).forEach(function (k) {
+    var d = S.days[k];
+    if (!d.blocks.length && !d.review) delete S.days[k];
+  });
+  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch (e) { if (!saveWarned) { saveWarned = true; toast('保存失败：这里不允许存储数据'); } }
+}
+var undoSnap = null;
+function snap() { undoSnap = JSON.stringify(S); }
+
+function getDay(k, create) {
+  var d = S.days[k];
+  if (!d && create) d = S.days[k] = { blocks: [], review: '' };
+  return d || { blocks: [], review: '' };
+}
+function findBlock(k, id) { return getDay(k).blocks.filter(function (b) { return b.id === id; })[0] || null; }
+function lastEnd(day) { return day.blocks.length ? Math.max.apply(null, day.blocks.map(function (b) { return b.end; })) : null; }
+function catIdx(id) { var i = CAT_IDS.indexOf(id); return i < 0 ? 4 : i; }
+function catOf(id) { return S.cats[catIdx(id)]; }
+function catColor(id) { var i = catIdx(id); return S.cats[i].color || ('var(--c' + i + ')'); }
+function dayStats(d) {
+  var mins = 0, sw = 0, sd = 0, n = 0, first = null, last = null;
+  d.blocks.forEach(function (b) {
+    var m = b.end - b.start;
+    mins += m;
+    first = first == null ? b.start : Math.min(first, b.start);
+    last = last == null ? b.end : Math.max(last, b.end);
+    if (b.done != null) { n++; var w = S.settings.weighted ? m : 1; sw += w; sd += w * b.done; }
+  });
+  return { count: d.blocks.length, mins: mins, scored: n, rate: sw ? sd / sw : null, first: first, last: last };
+}
+function overlapInfo(bs) {
+  var ov = {};
+  for (var i = 0; i < bs.length; i++) {
+    for (var j = i + 1; j < bs.length; j++) {
+      var a = bs[i], b = bs[j];
+      if (b.start >= a.end) continue;
+      var m = Math.min(a.end, b.end) - b.start;
+      if (!ov[b.id]) ov[b.id] = { with: a.title, mins: m };
+      if (!ov[a.id]) ov[a.id] = { with: b.title, mins: m };
+    }
+  }
+  return ov;
+}
+// 找一个放得下 dur 分钟的开始时间：优先 pref，然后往后找空当，再从一天开头找
+function findSlot(blocks, pref, dur) {
+  var st = S.settings;
+  var bs = blocks.slice().sort(byStart);
+  function fits(s) {
+    return s >= st.dayStart && s + dur <= st.dayEnd && !bs.some(function (b) { return s < b.end && b.start < s + dur; });
+  }
+  var cands = [pref].concat(bs.map(function (b) { return b.end; }).filter(function (e) { return e >= pref; }), [st.dayStart], bs.map(function (b) { return b.end; }));
+  for (var i = 0; i < cands.length; i++) if (fits(cands[i])) return cands[i];
+  return clamp(pref, st.dayStart, st.dayEnd - dur);
+}
+
+/* ======================= 界面：顶栏与各页 ======================= */
+var view = 'today', dayView = null;
+
+function renderHeader(title, date, sub, back) {
+  $('#top').innerHTML =
+    (back ? '<button class="icon-btn back" data-a="back" aria-label="返回">' + ICON.back + '</button>' : '') +
+    '<div class="h-main"><div class="h-title">' + esc(title) + (date ? '<span class="h-date">' + esc(date) + '</span>' : '') + '</div>' +
+    (sub ? '<div class="h-sub">' + sub + '</div>' : '') + '</div>' +
+    '<button class="icon-btn" data-a="settings" aria-label="设置">' + ICON.set + '</button>';
+}
+
+function render() {
+  document.documentElement.setAttribute('data-theme', S.settings.theme);
+  var tabV = view === 'day' ? 'review' : view;
+  $$('#tabs button').forEach(function (b) {
+    if (b.dataset.v === tabV) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  var undone = S.pool.filter(function (p) { return !p.done; }).length;
+  var badge = $('#poolBadge'); if (badge) badge.textContent = undone ? String(undone) : '';
+  $('#fab').hidden = !(view === 'today' || view === 'tomorrow' || view === 'day');
+  var html = '';
+  if (!storageOK) html += '<div class="banner bad"><span class="b-ico">' + ICON.warn + '</span><div><b>这里存不了数据</b><span>关掉网页后内容会丢失。请用 Safari 打开网址，添加到主屏幕后从图标打开。</span></div></div>';
+  if (view === 'today') html += viewToday();
+  else if (view === 'tomorrow') html += viewTomorrow();
+  else if (view === 'pool') html += viewPool();
+  else if (view === 'review') html += viewReview();
+  else if (view === 'day') html += viewDay(dayView);
+  $('#main').innerHTML = html;
+  if (view === 'review') mountReview();
+}
+
+function hintBanner() {
+  if (S.meta.hintOff || !isIOS() || isStandalone()) return '';
+  return '<div class="banner"><span class="b-ico">' + ICON.share + '</span><div><b>先添加到主屏幕</b>' +
+    '<span>点 Safari 的分享按钮，选「添加到主屏幕」，以后从图标打开。图标里的数据和 Safari 里是分开的，导入记录请在图标里做。</span></div>' +
+    '<button class="icon-btn sm" data-a="hint-off" aria-label="不再提示">' + ICON.x + '</button></div>';
+}
+function wrapInfo() {
+  var d = S.days[today()];
+  if (!d || !d.blocks.length) return null;
+  var nm = nowMin();
+  var unscored = d.blocks.filter(function (b) { return b.done == null && b.start < nm; }).length;
+  var unfinished = d.blocks.filter(function (b) { return b.done != null && b.done < 1 && !b.carryDone; }).length;
+  return { unscored: unscored, unfinished: unfinished, wrapped: !!d.wrapped };
+}
+function wrapBanner() {
+  var w = wrapInfo();
+  if (!w || w.wrapped || (!w.unscored && !w.unfinished)) return '';
+  var parts = [];
+  if (w.unscored) parts.push(w.unscored + ' 块没打分');
+  if (w.unfinished) parts.push(w.unfinished + ' 块没做完');
+  return '<button class="banner hot" data-a="wrap"><span class="b-ico">' + ICON.check + '</span><div><b>先给今天收个尾</b><span>' +
+    parts.join('，') + '，1 分钟就好</span></div><i class="chev">›</i></button>';
+}
+function backupBanner() {
+  if (!S.settings.backupRemind || !Object.keys(S.days).length) return '';
+  var last = S.meta.lastBackup || S.meta.created || Date.now();
+  var days = Math.floor((Date.now() - last) / 864e5);
+  if (days < 7) return '';
+  return '<button class="banner" data-a="export"><span class="b-ico">' + ICON.save + '</span><div><b>' +
+    (S.meta.lastBackup ? '已经 ' + days + ' 天没备份了' : '还没有备份过') +
+    '</b><span>点这里导出一份备份，存到「文件」里</span></div><i class="chev">›</i></button>';
+}
+
+function viewToday() {
+  var k = today(), d = getDay(k), st = dayStats(d), h = new Date().getHours();
+  var sub = st.count ? ('完成 ' + (st.rate == null ? '—' : pct(st.rate)) + ' · 已打分 ' + st.scored + '/' + st.count) : '还没有安排';
+  renderHeader('今天', dayLabel(k), sub);
+  var html = hintBanner();
+  var night = h >= S.settings.planHour || h < BOUNDARY_H;
+  if (night) {
+    html += wrapBanner();
+    var t = dayStats(getDay(tomorrow()));
+    html += '<button class="banner" data-a="tab" data-v="tomorrow"><span class="b-ico">' + ICON.moon + '</span><div><b>去排明天</b><span>' +
+      (t.count ? '已经排了 ' + t.count + ' 块，' + fmt(t.first) + ' 开始' : '明天还空着') + '</span></div><i class="chev">›</i></button>';
+  }
+  if (d.blocks.length && (night || d.wrapped)) {
+    html += '<div class="toolbar"><button class="pill" data-a="wrap">' + ICON.check + '今天收尾</button></div>';
+  }
+  html += timeline(k, 'today');
+  return html;
+}
+
+function viewTomorrow() {
+  var k = tomorrow(), d = getDay(k), st = dayStats(d);
+  var sub = st.count ? (st.count + ' 块 · ' + hours(st.mins) + ' 小时 · ' + fmt(st.first) + '–' + fmt(st.last)) : '还没有安排';
+  renderHeader('明天', dayLabel(k), sub);
+  var html = hintBanner() + wrapBanner() + backupBanner();
+  var td = getDay(today());
+  var undone = S.pool.filter(function (p) { return !p.done; }).length;
+  if (d.blocks.length || undone) {
+    html += '<div class="toolbar">' +
+      (td.blocks.length ? '<button class="pill" data-a="copy-day" data-from="' + today() + '" data-to="' + k + '">' + ICON.copy + '复制今天</button>' : '') +
+      (undone ? '<button class="pill" data-a="tab" data-v="pool">' + ICON.list + '待办 ' + undone + ' 件</button>' : '') +
+      (d.blocks.length ? '<button class="pill" data-a="clear-day" data-date="' + k + '">' + ICON.trash + '清空</button>' : '') +
+      '</div>';
+  }
+  html += timeline(k, 'plan');
+  return html;
+}
+
+function viewDay(k) {
+  var t = today();
+  var d = getDay(k), st = dayStats(d);
+  var mode = k < t ? 'past' : (k === t ? 'today' : 'plan');
+  renderHeader(dayLabel(k), '', st.count ? ('完成 ' + (st.rate == null ? '—' : pct(st.rate)) + ' · ' + st.count + ' 块 · ' + hours(st.mins) + ' 小时') : '', true);
+  var html = '<div class="toolbar">' +
+    (d.blocks.length && k !== tomorrow() ? '<button class="pill" data-a="copy-day" data-from="' + k + '" data-to="' + tomorrow() + '">' + ICON.copy + '复制到明天</button>' : '') +
+    (k <= t ? '<button class="pill" data-a="review-edit" data-date="' + k + '">写心得</button>' : '') + '</div>';
+  if (d.review) html += '<div class="notebox">「' + esc(d.review) + '」</div>';
+  html += timeline(k, mode);
+  return html;
+}
+
+function timeline(k, mode) {
+  var d = getDay(k);
+  var bs = d.blocks.slice().sort(byStart);
+  if (!bs.length) return emptyState(k, mode);
+  var ov = overlapInfo(bs);
+  var nm = mode === 'today' ? nowMin() : null;
+  var placed = nm == null;
+  var maxEnd = null;
+  var html = '<div class="tl">';
+  bs.forEach(function (b) {
+    if (maxEnd != null && b.start > maxEnd) {
+      var hasNow = !placed && nm >= maxEnd && nm < b.start;
+      html += gapRow(k, maxEnd, b.start, hasNow ? nm : null);
+      if (hasNow) placed = true;
+    }
+    if (!placed && nm < b.start) { html += nowRow(nm); placed = true; }
+    var isNow = !placed && nm >= b.start && nm < b.end;
+    if (isNow) placed = true;
+    html += blockRow(k, b, mode, { isNow: isNow, ov: ov[b.id], nm: nm });
+    maxEnd = maxEnd == null ? b.end : Math.max(maxEnd, b.end);
+  });
+  if (!placed) html += nowRow(nm);
+  html += '</div>';
+  if (maxEnd < S.settings.dayEnd - S.settings.unit) {
+    html += '<button class="addrow" data-a="add" data-date="' + k + '" data-start="' + maxEnd + '">＋ 在 ' + fmt(maxEnd) + ' 之后加一块</button>';
+  }
+  return html;
+}
+function nowRow(nm) { return '<div class="nowline num">现在 ' + fmt(nm % 1440) + '</div>'; }
+function gapRow(k, s, e, nm) {
+  var m = e - s;
+  if (m < 5) return '';
+  return '<div class="gap' + (nm != null ? ' has-now' : '') + '" role="button" tabindex="0" data-a="add" data-date="' + k + '" data-start="' + s + '" data-end="' + e + '">' +
+    '<div class="tcol"><span>' + fmt(s) + '</span></div><div class="gl"><span>' + (nm != null ? '现在 ' + fmt(nm) + ' · ' : '') +
+    '空闲 ' + durLabel(m) + '</span><span>＋</span></div></div>';
+}
+function blockRow(k, b, mode, o) {
+  var dur = b.end - b.start;
+  var hpx = Math.round(clamp(40 + dur * 0.6, 60, 160));
+  var meta = '';
+  if (o.ov) meta += '<span class="bad">与「' + esc(trunc(o.ov.with, 8)) + '」重叠 ' + o.ov.mins + ' 分</span>';
+  else if (o.isNow) meta += '<span class="nowtag">进行中 · 还剩 ' + durLabel(b.end - o.nm) + '</span>';
+  if (mode !== 'plan') {
+    if (b.done == null) {
+      if (mode === 'past' || (o.nm != null && o.nm >= b.end)) meta += '<span class="todo">待打分</span>';
+    } else {
+      meta += '<span class="score' + (b.done >= 1 ? ' full' : b.done === 0 ? ' zero' : '') + '">' +
+        (b.done >= 1 ? '完成' : b.done === 0 ? '没做' : '完成 ' + pct(b.done)) + '</span>';
+    }
+  }
+  meta += '<span>' + esc(catOf(b.cat).name) + '</span>';
+  if (b.from) meta += '<span class="from">顺延' + (b.fromDone ? ' · 已做 ' + pct(b.fromDone) : '') + '</span>';
+  var fill = (mode !== 'plan' && b.done > 0) ? '<div class="fill" style="width:' + Math.round(b.done * 100) + '%"></div>' : '';
+  return '<div class="blk" role="button" tabindex="0" data-a="block" data-date="' + k + '" data-id="' + b.id + '">' +
+    '<div class="tcol"><span class="s">' + fmt(b.start) + '</span><span>' + fmt(b.end) + '</span></div>' +
+    '<div class="card' + (o.isNow ? ' now' : '') + (o.ov ? ' ov' : '') + '" style="--c:' + catColor(b.cat) + ';min-height:' + hpx + 'px">' + fill +
+    '<div class="in"><div class="r1"><span class="ti">' + esc(b.title) + '</span><span class="du">' + durLabel(dur) + '</span></div>' +
+    (b.note ? '<div class="no">' + esc(b.note) + '</div>' : '') + '<div class="me">' + meta + '</div></div></div></div>';
+}
+function emptyState(k, mode) {
+  var t = today();
+  var canCopy = mode === 'plan' && k !== t && getDay(t).blocks.length;
+  return '<div class="empty"><b>' + (mode === 'plan' ? '这一天还空着' : '这一天没有安排') + '</b><div>' +
+    (mode === 'plan' ? '可以先复制今天再改几块，也可以从第一块开始排。' : '点右下角的 ＋ 加一块。') + '</div><div class="acts">' +
+    (canCopy ? '<button class="btn primary" data-a="copy-day" data-from="' + t + '" data-to="' + k + '">复制今天</button>' : '') +
+    '<button class="btn" data-a="add" data-date="' + k + '" data-start="' + S.settings.wake + '">从 ' + fmt(S.settings.wake) + ' 开始</button></div></div>';
+}
+
+/* ---------- 待办池 ---------- */
+function poolSort(a, b) {
+  if (a.due && b.due) return a.due < b.due ? -1 : a.due > b.due ? 1 : a.created - b.created;
+  if (a.due) return -1;
+  if (b.due) return 1;
+  return a.created - b.created;
+}
+function viewPool() {
+  var undone = S.pool.filter(function (p) { return !p.done; }).sort(poolSort);
+  var done = S.pool.filter(function (p) { return p.done; }).sort(function (a, b) { return (b.doneAt || 0) - (a.doneAt || 0); });
+  renderHeader('待办池', '', undone.length ? undone.length + ' 件还没排进时间' : '想到要做的事，先记在这里');
+  var html = '<form class="padd" data-form="pool-add"><input class="inp" id="poolT" placeholder="比如：有机化学实验报告" maxlength="60" autocomplete="off" enterkeyhint="done">' +
+    '<button class="btn primary" type="submit">记下</button></form>' +
+    '<div class="pdue"><span>截止日期（可不填）</span><input type="date" class="inp" id="poolDue"></div>';
+  html += undone.length ? '<div class="plist">' + undone.map(poolRow).join('') + '</div>'
+    : '<div class="empty"><b>待办池是空的</b><div>上面输入就能记下；睡前收尾时，没做完的事也可以放进来。</div></div>';
+  if (done.length) {
+    html += '<details class="pdone"><summary>已完成 ' + done.length + ' 件</summary><div class="plist">' + done.map(poolRow).join('') +
+      '</div><button class="btn wide" data-a="pool-clear-done">清掉已完成的</button></details>';
+  }
+  return html;
+}
+function poolRow(p) {
+  var due = '';
+  if (p.due && !p.done) {
+    var n = diffDays(today(), p.due);
+    due = n < 0 ? '<span class="bad">已过期 ' + (-n) + ' 天</span>' : n === 0 ? '<span class="warn">今天截止</span>'
+      : n === 1 ? '<span class="warn">明天截止</span>' : shortLabel(p.due) + ' 截止 · 还有 ' + n + ' 天';
+  }
+  var meta = [due, p.from ? '从 ' + shortLabel(p.from) + ' 顺延' : '', p.note ? esc(trunc(p.note, 20)) : ''].filter(Boolean).join(' · ');
+  return '<div class="prow' + (p.done ? ' done' : '') + '" style="--c:' + (p.cat ? catColor(p.cat) : 'var(--muted)') + '">' +
+    '<button class="ck" data-a="pool-toggle" data-id="' + p.id + '" aria-label="' + (p.done ? '标为没做完' : '标为完成') + '">' + (p.done ? ICON.check : '') + '</button>' +
+    '<div class="pt" role="button" tabindex="0" data-a="pool-edit" data-id="' + p.id + '"><div class="ptt">' + esc(p.t) + '</div>' +
+    (meta ? '<div class="pm">' + meta + '</div>' : '') + '</div>' +
+    (p.done ? '' : '<button class="pill sm" data-a="pool-plan" data-id="' + p.id + '">排进明天</button>') + '</div>';
+}
+
+/* ---------- 复盘 ---------- */
+function recordKeys() {
+  var t = today();
+  return Object.keys(S.days).filter(function (k) { return k <= t && S.days[k].blocks.length; }).sort().reverse();
+}
+function viewReview() {
+  var keys = recordKeys();
+  renderHeader('复盘', '', keys.length ? '记录了 ' + keys.length + ' 天' : '');
+  if (!keys.length) {
+    return '<div class="empty"><b>还没有记录</b><div>每天睡前给今天打个分，这里就会慢慢有内容。以前的记录可以在设置里导入。</div>' +
+      '<div class="acts"><button class="btn" data-a="settings">打开设置</button></div></div>';
+  }
+  var last7 = keys.slice(0, 7);
+  var rates = last7.map(function (k) { return dayStats(S.days[k]).rate; }).filter(function (r) { return r != null; });
+  var avg = rates.length ? rates.reduce(function (a, b) { return a + b; }, 0) / rates.length : null;
+  var html = '<div class="tiles"><div class="tile"><div class="tv num">' + (avg == null ? '—' : pct(avg)) + '</div><div class="tl2">最近 ' + last7.length +
+    ' 个记录日的平均完成率</div></div><div class="tile"><div class="tv num">' + keys.length + '</div><div class="tl2">一共记录的天数</div></div></div>';
+  var n14 = Math.min(14, keys.length);
+  html += '<section class="panel"><div class="ph"><b>每天完成率</b><span>最近 ' + n14 + ' 个记录日 · 点柱子看那天</span></div>' +
+    '<div class="chart" id="rateChart"></div><div class="tip" id="rateTip">&nbsp;</div></section>';
+  var catM = S.cats.map(function () { return 0; });
+  last7.forEach(function (k) { S.days[k].blocks.forEach(function (b) { catM[catIdx(b.cat)] += b.end - b.start; }); });
+  var maxM = Math.max.apply(null, catM.concat([1]));
+  html += '<section class="panel"><div class="ph"><b>分类用时</b><span>最近 ' + last7.length + ' 个记录日合计</span></div><div class="cbars">' +
+    S.cats.map(function (c, i) {
+      return '<div class="cbar"><span class="cn"><i class="dot" style="--c:' + catColor(c.id) + '"></i>' + esc(c.name) + '</span>' +
+        '<span class="ct">' + (catM[i] ? '<i style="width:' + (catM[i] / maxM * 100).toFixed(1) + '%;--c:' + catColor(c.id) + '"></i>' : '') + '</span>' +
+        '<span class="cv num">' + hours(catM[i]) + ' 小时</span></div>';
+    }).join('') + '</div></section>';
+  html += '<div class="ph lst"><b>每一天</b><span>点开可以查看、补打分或复制到明天</span></div><div class="days">' + keys.map(dayRow).join('') + '</div>';
+  return html;
+}
+function dayRow(k) {
+  var d = S.days[k], st = dayStats(d);
+  var seg = S.cats.map(function (c, i) {
+    var m = d.blocks.filter(function (b) { return catIdx(b.cat) === i; }).reduce(function (a, b) { return a + b.end - b.start; }, 0);
+    return m ? '<i style="flex:' + m + ';--c:' + catColor(c.id) + '"></i>' : '';
+  }).join('');
+  return '<div class="dayrow" role="button" tabindex="0" data-a="open-day" data-date="' + k + '">' +
+    '<div class="dr1"><b>' + dayLabel(k) + '</b>' + (k === today() ? '<span class="tag">今天</span>' : '') +
+    '<span class="rate num">' + (st.rate == null ? '未打分' : pct(st.rate)) + '</span></div>' +
+    '<div class="dbar">' + seg + '</div>' +
+    '<div class="dr2">' + st.count + ' 块 · ' + hours(st.mins) + ' 小时 · 已打分 ' + st.scored + '/' + st.count + '</div>' +
+    (d.review ? '<div class="drv">「' + esc(d.review) + '」</div>' : '') + '</div>';
+}
+function mountReview() {
+  var el = $('#rateChart');
+  if (!el) return;
+  var keys = recordKeys().slice(0, 14).reverse();
+  drawRate(el, keys, null);
+}
+function roundTop(x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h));
+  return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y + 'H' + (x + w - r) +
+    'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+}
+function drawRate(el, keys, sel) {
+  var W = Math.max(240, el.clientWidth || 320), H = 150, ml = 34, mr = 6, mt = 18, mb = 22;
+  var iw = W - ml - mr, ih = H - mt - mb;
+  var band = iw / Math.max(keys.length, 7);
+  var bw = Math.max(6, Math.min(22, band * 0.6));
+  var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="每天完成率柱状图">';
+  [0, 0.5, 1].forEach(function (g) {
+    var y = mt + ih * (1 - g);
+    s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '" class="' + (g === 0 ? 'base' : 'grid') + '"/>' +
+      '<text x="' + (ml - 6) + '" y="' + (y + 3.5) + '" class="ax" text-anchor="end">' + (g * 100) + '%</text>';
+  });
+  var lastIdx = -1;
+  keys.forEach(function (k, i) { if (dayStats(S.days[k]).rate != null) lastIdx = i; });
+  keys.forEach(function (k, i) {
+    var st = dayStats(S.days[k]);
+    var cx = ml + band * (i + 0.5), x = cx - bw / 2;
+    if (st.rate != null) {
+      var h = Math.max(2, ih * st.rate), y = mt + ih - h;
+      s += '<path d="' + roundTop(x, y, bw, h, 4) + '" class="bar' + (k === sel ? ' sel' : '') + '"/>';
+      if ((sel == null && i === lastIdx) || k === sel) {
+        s += '<text x="' + cx + '" y="' + (y - 5) + '" class="val" text-anchor="middle">' + pct(st.rate) + '</text>';
+      }
+    } else {
+      s += '<text x="' + cx + '" y="' + (mt + ih - 4) + '" class="ax" text-anchor="middle">–</text>';
+    }
+    if (keys.length <= 7 || (keys.length - 1 - i) % 2 === 0) {
+      s += '<text x="' + cx + '" y="' + (H - 6) + '" class="ax" text-anchor="middle">' + shortLabel(k) + '</text>';
+    }
+    s += '<rect class="hit" data-k="' + k + '" x="' + (ml + band * i) + '" y="0" width="' + band + '" height="' + H + '" fill="transparent"/>';
+  });
+  el.innerHTML = s + '</svg>';
+  el.classList.toggle('has-sel', !!sel);
+  el.onclick = function (e) {
+    var r = e.target.closest && e.target.closest('.hit');
+    if (!r) return;
+    var k = r.getAttribute('data-k');
+    var nsel = k === sel ? null : k;
+    drawRate(el, keys, nsel);
+    var tip = $('#rateTip');
+    if (!nsel) { tip.innerHTML = '&nbsp;'; return; }
+    var st = dayStats(S.days[k]);
+    tip.innerHTML = '<b>' + dayLabel(k) + '</b> · ' + (st.rate == null ? '未打分' : '完成 ' + pct(st.rate)) + ' · 已打分 ' + st.scored + '/' + st.count +
+      ' · ' + hours(st.mins) + ' 小时 · <button class="link" data-a="open-day" data-date="' + k + '">打开这天 ›</button>';
+  };
+}
+
+/* ======================= 弹出面板 ======================= */
+var rStart = null, rDur = null, ed = null, pendingCopy = null, editingPool = null, wrapIds = [];
+
+var sheetGen = 0;   // 防止「刚打开就关掉」时，延迟的打开动画把面板又打开
+function openSheet(html, mount) {
+  var w = $('#sheetWrap'), s = $('#sheet'), g = ++sheetGen;
+  hideToast();
+  rStart = rDur = null;
+  s.innerHTML = html;
+  s.scrollTop = 0;
+  w.hidden = false;
+  document.documentElement.classList.add('lock');
+  requestAnimationFrame(function () { requestAnimationFrame(function () { if (g === sheetGen) w.classList.add('open'); }); });
+  if (mount) mount();
+}
+function closeSheet() {
+  var w = $('#sheetWrap');
+  if (w.hidden) return;
+  sheetGen++;
+  w.classList.remove('open');
+  document.documentElement.classList.remove('lock');
+  rStart = rDur = null; ed = null; editingPool = null;
+  setTimeout(function () { if (!w.classList.contains('open')) { w.hidden = true; $('#sheet').innerHTML = ''; } }, 260);
+}
+function sheetOpen() { return !$('#sheetWrap').hidden && $('#sheetWrap').classList.contains('open'); }
+
+function scoreChips(cur, action, withNone, k, id) {
+  var h = withNone ? '<button class="chip" data-a="' + action + '" data-v="" aria-pressed="' + (cur == null) + '">未打分</button>' : '';
+  [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+    h += '<button class="chip" data-a="' + action + '" data-v="' + v + '"' + (k ? ' data-date="' + k + '" data-id="' + id + '"' : '') +
+      ' aria-pressed="' + (cur != null && Math.abs(cur - v) < 0.001) + '">' + (v === 0 ? '没做' : Math.round(v * 100) + '%') + '</button>';
+  });
+  return h;
+}
+
+/* ---------- 打分 ---------- */
+function openScore(k, id) {
+  var b = findBlock(k, id);
+  if (!b) return;
+  openSheet('<div class="grab"></div><div class="sh-h"><div class="sh-t"><h2>' + esc(b.title) + '</h2><div class="muted num" style="font-size:13px">' +
+    fmt(b.start) + '–' + fmt(b.end) + ' · ' + durLabel(b.end - b.start) + ' · ' + esc(catOf(b.cat).name) + '</div></div>' +
+    '<button class="icon-btn" data-a="close" aria-label="关闭">' + ICON.x + '</button></div>' +
+    (b.note ? '<div class="notebox">' + esc(b.note) + '</div>' : '') +
+    '<div class="sub-lab">完成了多少？</div><div class="chips score big">' + scoreChips(b.done, 'score', false, k, id) + '</div>' +
+    '<div class="btns"><button class="btn" data-a="score-clear" data-date="' + k + '" data-id="' + id + '"' + (b.done == null ? ' disabled' : '') + '>清除打分</button>' +
+    '<button class="btn" data-a="edit" data-date="' + k + '" data-id="' + id + '">编辑这一块</button></div>');
+}
+
+/* ---------- 编辑一块（刻度尺） ---------- */
+function openEditor(o) {
+  var st = S.settings, u = st.unit;
+  var day = getDay(o.date);
+  var b = o.id ? findBlock(o.date, o.id) : null;
+  ed = { date: o.date, id: null, start: st.wake, dur: 30, title: '', cat: 'life', catTouched: false, note: '', done: null,
+    savePreset: false, ripple: false, chain: [], fromPool: o.fromPool || null, oldEnd: null };
+  if (b) {
+    ed.id = b.id; ed.start = b.start; ed.dur = b.end - b.start; ed.title = b.title; ed.cat = b.cat; ed.catTouched = true;
+    ed.note = b.note; ed.done = b.done; ed.oldEnd = b.end;
+    ed.chain = chainIds(day.blocks, b.id, b.end);   // 默认不勾，避免把固定的课也一起挪走
+  } else {
+    var start = (o.start != null && !isNaN(o.start)) ? o.start : lastEnd(day);
+    if (start == null) start = st.wake;
+    // 最后一块已经排到很晚：改成从起床时间往后找一个能放下半小时的空当
+    if ((o.start == null || isNaN(o.start)) && start + 30 > st.dayEnd) start = findSlot(day.blocks, st.wake, 30);
+    start = clamp(start, st.dayStart, st.dayEnd - u);
+    var dur = o.dur || 30;
+    if (o.end != null && !isNaN(o.end) && o.end > start) dur = Math.min(dur, o.end - start);
+    dur = Math.max(u, Math.round(dur / u) * u);
+    if (start + dur > st.dayEnd) dur = Math.max(u, st.dayEnd - start);
+    ed.start = start; ed.dur = dur;
+    if (o.title) {
+      ed.title = o.title;
+      ed.note = o.note || '';
+      if (o.cat) { ed.cat = o.cat; ed.catTouched = true; } else { ed.cat = guessCat(o.title) || 'life'; }
+    }
+  }
+  openSheet(editorHTML(), mountEditor);
+}
+function editorHTML() {
+  var k = ed.date, isNew = !ed.id, canScore = k <= today();
+  var presets = S.presets.map(function (p, i) {
+    return '<button class="chip" data-a="ed-preset" data-i="' + i + '" style="--c:' + catColor(p.cat) + '"><i class="dot"></i>' + esc(p.title) + '</button>';
+  }).join('');
+  var pool = S.pool.filter(function (p) { return !p.done; }).sort(poolSort).slice(0, 15).map(function (p) {
+    return '<button class="chip" data-a="ed-pool" data-id="' + p.id + '" aria-pressed="' + (ed.fromPool === p.id) + '">' + esc(trunc(p.t, 14)) + '</button>';
+  }).join('');
+  var cats = S.cats.map(function (c) {
+    return '<button class="chip" data-a="ed-cat" data-id="' + c.id + '" aria-pressed="' + (ed.cat === c.id) + '" style="--c:' + catColor(c.id) + '"><i class="dot"></i>' + esc(c.name) + '</button>';
+  }).join('');
+  var later = ed.id ? ed.chain.length : 0;
+  return '<div class="grab"></div>' +
+    '<div class="sh-h bar"><button class="txt-btn" data-a="close">取消</button><h2>' + (isNew ? '加一块' : '编辑') + '<small>' + dayLabel(k) + '</small></h2>' +
+    '<button class="txt-btn strong" data-a="ed-save">保存</button></div>' +
+    '<label class="field" style="margin-top:4px"><span class="lab">做什么</span><input class="inp" id="edTitle" maxlength="40" placeholder="比如：概率论作业" value="' + esc(ed.title) + '" autocomplete="off" enterkeyhint="done"></label>' +
+    (presets ? '<div class="sub-lab">常用</div><div class="chips scroll">' + presets + '</div>' : '') +
+    (pool ? '<div class="sub-lab">从待办池里挑</div><div class="chips scroll">' + pool + '</div>' : '') +
+    '<div class="timebox"><div class="big num" id="edBig"></div><div class="warn" id="edWarn"></div></div>' +
+    '<div class="rl"><div class="rl-h"><span class="lab">开始</span><button class="step" data-a="ed-step" data-k="start" data-d="-1" aria-label="早一格">−</button>' +
+    '<span class="val num" id="edStartV"></span><button class="step" data-a="ed-step" data-k="start" data-d="1" aria-label="晚一格">+</button></div><div class="ruler" id="rStart" tabindex="0" role="slider" aria-label="开始时间"></div></div>' +
+    '<div class="rl"><div class="rl-h"><span class="lab">时长</span><button class="step" data-a="ed-step" data-k="dur" data-d="-1" aria-label="短一格">−</button>' +
+    '<span class="val num" id="edDurV"></span><button class="step" data-a="ed-step" data-k="dur" data-d="1" aria-label="长一格">+</button></div><div class="ruler" id="rDur" tabindex="0" role="slider" aria-label="时长"></div></div>' +
+    '<div class="hint">左右拖动刻度尺，每格 ' + S.settings.unit + ' 分钟；点刻度可以直接跳过去</div>' +
+    '<div class="sub-lab">分类</div><div class="chips" id="edCats">' + cats + '</div>' +
+    '<label class="field"><span class="lab">备注（顺带做的事、注意事项）</span><textarea class="inp" id="edNote" rows="2" maxlength="200" placeholder="比如：上班时顺便写电工电子作业">' + esc(ed.note) + '</textarea></label>' +
+    (canScore ? '<div class="sub-lab">完成情况</div><div class="chips score" id="edScore">' + scoreChips(ed.done, 'ed-score', true) + '</div>' : '') +
+    (later ? '<label class="chk"><input type="checkbox" id="edRipple"' + (ed.ripple ? ' checked' : '') + '> 后面紧挨着的 ' + later + ' 块一起顺移</label>' : '') +
+    '<label class="chk"><input type="checkbox" id="edPreset"> 存为常用块（下次一点就能填）</label>' +
+    '<div class="btns">' + (isNew ? '' : '<button class="btn danger" data-a="ed-del">删除</button>') + '<button class="btn primary" data-a="ed-save">保存</button></div>';
+}
+function mountEditor() {
+  var st = S.settings, u = st.unit;
+  rStart = Ruler($('#rStart'), { kind: 'time', min: st.dayStart, max: st.dayEnd, step: u, value: ed.start, lo: st.dayStart, hi: st.dayEnd - u,
+    onInput: function (v) { setStart(v); } });
+  rDur = Ruler($('#rDur'), { kind: 'dur', min: 0, max: 480, step: u, value: ed.dur, lo: u, hi: Math.min(480, st.dayEnd - ed.start),
+    onInput: function (v) { setDur(v); } });
+  rStart.setBands(edOthers());
+  $('#edTitle').addEventListener('input', function (e) {
+    ed.title = e.target.value;
+    if (!ed.catTouched) { var g = guessCat(ed.title); if (g && g !== ed.cat) { ed.cat = g; syncCats(); } }
+  });
+  $('#edNote').addEventListener('input', function (e) { ed.note = e.target.value; });
+  var rp = $('#edRipple');
+  if (rp) rp.addEventListener('change', function (e) { ed.ripple = e.target.checked; rStart.setBands(edOthers()); updEd(); });
+  $('#edPreset').addEventListener('change', function (e) { ed.savePreset = e.target.checked; });
+  updEd();
+}
+// 紧挨在这一块后面的一串：开始时间正好等于前一块结束时间，中间没有空当
+function chainIds(blocks, selfId, oldEnd) {
+  var ids = [], cur = oldEnd;
+  var bs = blocks.filter(function (b) { return b.id !== selfId; });
+  for (var guard = 0; guard < 200; guard++) {
+    var next = bs.filter(function (b) { return b.start === cur && ids.indexOf(b.id) < 0; });
+    if (!next.length) break;
+    next.forEach(function (b) { ids.push(b.id); });
+    cur = Math.max.apply(null, next.map(function (b) { return b.end; }));
+  }
+  return ids;
+}
+function edOthers() {
+  var others = getDay(ed.date).blocks.filter(function (b) { return b.id !== ed.id; });
+  if (ed.id && ed.ripple) {
+    var delta = ed.start + ed.dur - ed.oldEnd;
+    others = others.map(function (b) { return ed.chain.indexOf(b.id) >= 0 ? Object.assign({}, b, { start: b.start + delta, end: b.end + delta }) : b; });
+  }
+  return others;
+}
+function setStart(v) {
+  var st = S.settings;
+  ed.start = clamp(v, st.dayStart, st.dayEnd - st.unit);
+  var hi = Math.min(480, st.dayEnd - ed.start);
+  rDur.setRange(st.unit, hi);
+  if (ed.dur > hi) { ed.dur = Math.max(st.unit, hi); rDur.set(ed.dur); }
+  if (ed.id && ed.ripple) rStart.setBands(edOthers());
+  updEd();
+}
+function setDur(v) {
+  var st = S.settings;
+  ed.dur = clamp(v, st.unit, Math.min(480, st.dayEnd - ed.start));
+  if (ed.id && ed.ripple) rStart.setBands(edOthers());
+  updEd();
+}
+function updEd() {
+  if (!ed || !$('#edBig')) return;
+  var s = ed.start, e = ed.start + ed.dur;
+  $('#edBig').textContent = fmt(s) + ' – ' + fmt(e);
+  $('#edStartV').textContent = fmt(s);
+  $('#edDurV').textContent = durLabel(ed.dur);
+  if (rStart) rStart.setSelf(ed.dur);
+  var ovs = edOthers().filter(function (b) { return b.start < e && s < b.end; }).map(function (b) {
+    return { title: b.title, mins: Math.min(e, b.end) - Math.max(s, b.start) };
+  });
+  $('#edWarn').textContent = ovs.length ? ('和「' + trunc(ovs[0].title, 10) + '」重叠 ' + ovs[0].mins + ' 分钟' + (ovs.length > 1 ? '，还有另外 ' + (ovs.length - 1) + ' 块' : '')) : '';
+}
+function syncCats() {
+  $$('#edCats .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.id === ed.cat)); });
+}
+function saveEditor() {
+  var t = ($('#edTitle').value || '').trim();
+  if (!t) { toast('先写一下要做什么'); $('#edTitle').focus(); return; }
+  var note = ($('#edNote').value || '').trim();
+  var day = getDay(ed.date, true);
+  var s = ed.start, e = ed.start + ed.dur;
+  if (ed.id) {
+    var b = day.blocks.filter(function (x) { return x.id === ed.id; })[0];
+    if (!b) { closeSheet(); return; }
+    if (ed.ripple) {
+      var delta = e - ed.oldEnd;
+      if (delta) day.blocks.forEach(function (x) {
+        if (ed.chain.indexOf(x.id) >= 0) {
+          var len = x.end - x.start;
+          x.start = clamp(x.start + delta, 0, 1435);
+          x.end = clamp(x.start + len, x.start + 5, 1440);
+        }
+      });
+    }
+    b.start = s; b.end = e; b.title = t; b.cat = ed.cat; b.note = note; b.done = ed.done;
+    if (b.done == null || b.done >= 1) { delete b.carry; delete b.carryDone; }
+  } else {
+    day.blocks.push({ id: uid(), start: s, end: e, title: t, cat: ed.cat, note: note, done: ed.done });
+  }
+  if (ed.fromPool) S.pool = S.pool.filter(function (p) { return p.id !== ed.fromPool; });
+  if (ed.savePreset) {
+    var preset = { title: t, cat: ed.cat, dur: ed.dur };
+    var i = S.presets.map(function (p) { return p.title; }).indexOf(t);
+    if (i >= 0) S.presets[i] = preset; else S.presets.push(preset);
+  }
+  day.blocks.sort(byStart);
+  var fromPool = !!ed.fromPool, savedDate = ed.date;
+  save(); closeSheet(); render();
+  if (fromPool) toast('已排进' + dayLabel(savedDate) + '，并从待办池移出');
+}
+function deleteBlock(k, id) {
+  var day = getDay(k, true), b = findBlock(k, id);
+  if (!b) return;
+  snap();
+  day.blocks = day.blocks.filter(function (x) { return x.id !== id; });
+  save(); closeSheet(); render();
+  toast('已删除「' + trunc(b.title, 10) + '」', true);
+}
+
+/* ---------- 刻度尺：左右拖动，每格 = 设置里的分钟数 ---------- */
+function durShort(v) {
+  if (v === 0) return '0';
+  if (v < 60) return v + '分';
+  return v % 60 ? (v / 60).toFixed(1).replace('.0', '') + '小时' : (v / 60) + '小时';
+}
+function Ruler(el, o) {
+  var step = o.step, ppm = SP / step;               // 每分钟多少像素
+  var span = (o.max - o.min) * ppm;
+  var cands = o.kind === 'time' ? [60, 120, 180] : [30, 60, 120];
+  var li = cands.filter(function (c) { return c * ppm >= 46; })[0] || cands[cands.length - 1];
+  var labels = '';
+  for (var v = o.min; v <= o.max; v += li) {
+    labels += '<span class="lbl" style="left:' + ((v - o.min) * ppm) + 'px">' + (o.kind === 'time' ? fmt(v) : durShort(v)) + '</span>';
+  }
+  el.innerHTML = '<div class="track" style="width:' + (span + 2) + 'px"><div class="off off-l"></div><div class="off off-r"></div><div class="bands"></div>' +
+    '<div class="ticks" style="--minor:' + SP + 'px;--major:' + (li * ppm) + 'px"></div>' + labels + '</div>' +
+    (o.kind === 'time' ? '<div class="self"></div>' : '') + '<div class="center"></div>';
+  var track = $('.track', el), self = $('.self', el), offL = $('.off-l', el), offR = $('.off-r', el), bandsEl = $('.bands', el);
+  var pos = o.value, lo = o.lo, hi = o.hi, raf = 0, last = o.value, drag = null;
+
+  function W() { return el.clientWidth || 300; }
+  function place() { track.style.transform = 'translate3d(' + (W() / 2 - (pos - o.min) * ppm).toFixed(1) + 'px,0,0)'; }
+  function snapV(p) { return Math.round(p / step) * step; }
+  function cl(p) { return clamp(p, lo, hi); }
+  function emit() { var v = cl(snapV(pos)); if (v !== last) { last = v; el.setAttribute('aria-valuenow', v); o.onInput(v); } }
+  function offs() {
+    offL.style.left = '0px'; offL.style.width = Math.max(0, (lo - o.min) * ppm) + 'px';
+    offR.style.left = ((hi - o.min) * ppm) + 'px'; offR.style.width = Math.max(0, (o.max - hi) * ppm) + 'px';
+  }
+  function animateTo(target, doEmit) {
+    cancelAnimationFrame(raf);
+    var from = pos, t0 = performance.now(), D = 180;
+    function f(now) {
+      var k = Math.min(1, (now - t0) / D), ease = 1 - Math.pow(1 - k, 3);
+      pos = from + (target - from) * ease; place();
+      if (k < 1) raf = requestAnimationFrame(f);
+      else { pos = target; place(); if (doEmit !== false) emit(); }
+    }
+    raf = requestAnimationFrame(f);
+  }
+  function settle() { animateTo(cl(snapV(pos))); }
+
+  el.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    cancelAnimationFrame(raf);
+    drag = { x0: e.clientX, p0: pos, moved: false, id: e.pointerId, samples: [{ x: e.clientX, t: performance.now() }] };
+    try { el.setPointerCapture(e.pointerId); } catch (err) { /* 有的浏览器不支持 */ }
+  });
+  el.addEventListener('pointermove', function (e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x0;
+    if (!drag.moved && Math.abs(dx) > 5) drag.moved = true;
+    if (!drag.moved) return;
+    pos = cl(drag.p0 - dx / ppm);
+    place(); emit();
+    drag.samples.push({ x: e.clientX, t: performance.now() });
+    if (drag.samples.length > 6) drag.samples.shift();
+  });
+  function end(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var d = drag; drag = null;
+    if (e.type === 'pointercancel') { settle(); return; }
+    if (!d.moved) {                                  // 点一下：跳到点的位置
+      var r = el.getBoundingClientRect();
+      animateTo(cl(snapV(pos + (e.clientX - r.left - r.width / 2) / ppm)));
+      return;
+    }
+    var a = d.samples[0], b = d.samples[d.samples.length - 1], dt = b.t - a.t;
+    var vel = dt > 0 ? (b.x - a.x) / dt : 0;        // 像素/毫秒
+    if (performance.now() - b.t > 90) vel = 0;
+    if (Math.abs(vel) < 0.15) { settle(); return; }
+    var prev = performance.now();
+    function tick(now) {                               // 松手后的惯性
+      var t = Math.min(32, now - prev); prev = now;
+      pos = cl(pos - vel * t / ppm);
+      vel *= Math.pow(0.93, t / 16);
+      place(); emit();
+      if (Math.abs(vel) > 0.03 && pos > lo && pos < hi) raf = requestAnimationFrame(tick); else settle();
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); api.nudge(-1); }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); api.nudge(1); }
+  });
+
+  var api = {
+    place: place,
+    set: function (v) { cancelAnimationFrame(raf); pos = cl(v); last = cl(v); place(); },
+    setRange: function (a, b) { lo = a; hi = Math.max(a, b); offs(); if (pos < lo || pos > hi) { pos = cl(pos); last = cl(snapV(pos)); place(); } },
+    setSelf: function (dur) { if (self) self.style.width = (dur * ppm) + 'px'; },
+    setBands: function (list) {
+      bandsEl.innerHTML = list.map(function (b) {
+        return '<div class="band" style="left:' + ((b.start - o.min) * ppm + 1) + 'px;width:' + Math.max(3, (b.end - b.start) * ppm - 2) + 'px;--c:' + catColor(b.cat) + '"></div>';
+      }).join('');
+    },
+    nudge: function (n) {
+      var base = n > 0 ? Math.floor(pos / step + 1e-6) * step + step : Math.ceil(pos / step - 1e-6) * step - step;
+      animateTo(cl(base));
+    }
+  };
+  el.setAttribute('aria-valuemin', lo); el.setAttribute('aria-valuemax', hi); el.setAttribute('aria-valuenow', pos);
+  offs(); place();
+  return api;
+}
+
+/* ---------- 复制、清空 ---------- */
+function copyDay(from, to) {
+  var src = getDay(from);
+  if (!src.blocks.length) { toast('那一天没有可以复制的安排'); return; }
+  var dst = getDay(to);
+  var doCopy = function (mode) {
+    snap();
+    var target = getDay(to, true);
+    var copies = src.blocks.map(function (b) { return { id: uid(), start: b.start, end: b.end, title: b.title, cat: b.cat, note: b.note, done: null }; });
+    target.blocks = mode === 'replace' ? copies : target.blocks.concat(copies);
+    target.blocks.sort(byStart);
+    save(); closeSheet();
+    view = to === tomorrow() ? 'tomorrow' : view; dayView = view === 'day' ? dayView : null;
+    render(); window.scrollTo(0, 0);
+    toast('已复制 ' + copies.length + ' 块到' + dayLabel(to) + '，可以接着改', true);
+  };
+  if (!dst.blocks.length) { doCopy('replace'); return; }
+  pendingCopy = doCopy;
+  openSheet('<div class="grab"></div><div class="sh-h"><h2>' + dayLabel(to) + ' 已经有 ' + dst.blocks.length + ' 块</h2><button class="icon-btn" data-a="close" aria-label="关闭">' + ICON.x + '</button></div>' +
+    '<p class="muted" style="margin:0 0 14px">要怎么放' + (from === today() ? '今天' : dayLabel(from)) + '的 ' + src.blocks.length + ' 块？</p>' +
+    '<div class="stack"><button class="btn primary" data-a="copy-go" data-mode="replace">替换掉现有的</button>' +
+    '<button class="btn" data-a="copy-go" data-mode="append">和现有的放在一起（重叠会标红）</button>' +
+    '<button class="btn" data-a="close">算了</button></div>');
+}
+function clearDay(k) {
+  var d = getDay(k);
+  if (!d.blocks.length) return;
+  if (!confirm('清空' + dayLabel(k) + '的 ' + d.blocks.length + ' 块？')) return;
+  snap();
+  d.blocks = [];
+  save(); render();
+  toast('已清空', true);
+}
+
+/* ---------- 今天收尾 ---------- */
+function openWrap() {
+  var d = getDay(today());
+  wrapIds = d.blocks.filter(function (b) { return b.done == null || (b.done < 1 && !b.carryDone); }).map(function (b) { return b.id; });
+  renderWrap(true);
+}
+function renderWrap(fresh) {
+  var k = today(), d = getDay(k, true), st = dayStats(d);
+  var rows = wrapIds.map(function (id) { return d.blocks.filter(function (b) { return b.id === id; })[0]; }).filter(Boolean).map(function (b) {
+    var unf = b.done != null && b.done < 1;
+    var carry = unf ? '<div class="carry"><span>没做完的：</span>' + [['next', '顺延到明天'], ['pool', '放进待办'], ['drop', '不管了']].map(function (c) {
+      return '<button class="chip" data-a="wrap-carry" data-id="' + b.id + '" data-v="' + c[0] + '" aria-pressed="' + (b.carry === c[0]) + '">' + c[1] + '</button>';
+    }).join('') + '</div>' : '';
+    return '<div class="wrow" style="--c:' + catColor(b.cat) + '"><div class="wt"><i class="dot"></i><b>' + esc(b.title) + '</b><span class="num">' +
+      fmt(b.start) + '–' + fmt(b.end) + '</span></div><div class="chips score">' + scoreChips(b.done, 'wrap-score', false, k, b.id) + '</div>' + carry + '</div>';
+  }).join('');
+  var html = '<div class="grab"></div><div class="sh-h"><div class="sh-t"><h2>今天收尾</h2><div class="muted" style="font-size:13px">' + dayLabel(k) +
+    ' · 完成 ' + (st.rate == null ? '—' : pct(st.rate)) + ' · 已打分 ' + st.scored + '/' + st.count + '</div></div>' +
+    '<button class="icon-btn" data-a="close" aria-label="关闭">' + ICON.x + '</button></div>' +
+    (rows || '<p class="muted">今天的块都打过分了。</p>') +
+    '<label class="field"><span class="lab">一句话心得（可不写）</span><textarea class="inp" id="wrapReview" rows="2" maxlength="200" placeholder="比如：晚上的作业又被挤掉了，明天早点开始">' + esc(d.review) + '</textarea></label>' +
+    '<div class="btns"><button class="btn primary" data-a="wrap-done">完成，去排明天</button></div>';
+  if (fresh || !$('#wrapReview')) {
+    openSheet(html, bindWrap);
+  } else {
+    var sh = $('#sheet'), top = sh.scrollTop;
+    sh.innerHTML = html; sh.scrollTop = top; bindWrap();
+  }
+}
+function bindWrap() {
+  var ta = $('#wrapReview');
+  if (ta) ta.addEventListener('input', function () { getDay(today(), true).review = ta.value.trim(); save(); });
+}
+function finishWrap() {
+  var k = today(), tk = tomorrow(), d = getDay(k, true), u = S.settings.unit;
+  var ta = $('#wrapReview'); if (ta) d.review = ta.value.trim();
+  var td = getDay(tk, true), nNext = 0, nPool = 0;
+  d.blocks.forEach(function (b) {
+    if (!(b.done != null && b.done < 1) || b.carryDone) return;
+    if (b.carry === 'next') {
+      var dur = b.end - b.start;
+      var rem = Math.max(u, Math.ceil(dur * (1 - b.done) / u) * u);
+      var s = findSlot(td.blocks, b.start, rem);
+      rem = Math.max(u, Math.min(rem, S.settings.dayEnd - s));
+      td.blocks.push({ id: uid(), start: s, end: s + rem, title: b.title, cat: b.cat, note: b.note, done: null, from: k, fromDone: b.done });
+      td.blocks.sort(byStart);
+      nNext++;
+    } else if (b.carry === 'pool') {
+      S.pool.push({ id: uid(), t: b.title, due: '', done: false, cat: b.cat, note: b.note || '', created: Date.now(), doneAt: null, from: k });
+      nPool++;
+    }
+    b.carryDone = true;
+  });
+  d.wrapped = true;
+  save(); closeSheet();
+  view = 'tomorrow'; dayView = null;
+  render(); window.scrollTo(0, 0);
+  var parts = [];
+  if (nNext) parts.push(nNext + ' 块顺延到明天');
+  if (nPool) parts.push(nPool + ' 件放进待办池');
+  toast(parts.length ? parts.join('，') : '今天收好了，排一下明天吧');
+}
+
+/* ---------- 待办编辑 ---------- */
+function openPoolEdit(id) {
+  var p = S.pool.filter(function (x) { return x.id === id; })[0];
+  if (!p) return;
+  editingPool = { id: id, cat: p.cat };
+  openSheet('<div class="grab"></div><div class="sh-h bar"><button class="txt-btn" data-a="close">取消</button><h2>待办</h2><button class="txt-btn strong" data-a="pool-save">保存</button></div>' +
+    '<label class="field" style="margin-top:4px"><span class="lab">内容</span><input class="inp" id="peT" maxlength="60" value="' + esc(p.t) + '"></label>' +
+    '<label class="field"><span class="lab">截止日期（可不填）</span><input type="date" class="inp" id="peDue" value="' + p.due + '"></label>' +
+    '<div class="sub-lab">分类（可不选）</div><div class="chips" id="peCats">' + S.cats.map(function (c) {
+      return '<button class="chip" data-a="pe-cat" data-id="' + c.id + '" aria-pressed="' + (p.cat === c.id) + '" style="--c:' + catColor(c.id) + '"><i class="dot"></i>' + esc(c.name) + '</button>';
+    }).join('') + '</div>' +
+    '<label class="field"><span class="lab">备注</span><textarea class="inp" id="peNote" rows="2" maxlength="200">' + esc(p.note) + '</textarea></label>' +
+    '<div class="btns"><button class="btn danger" data-a="pool-del">删除</button>' + (p.done ? '' : '<button class="btn primary" data-a="pool-plan" data-id="' + p.id + '">排进明天</button>') + '</div>');
+}
+function applyPoolEdit() {
+  if (!editingPool || !$('#peT')) return null;
+  var p = S.pool.filter(function (x) { return x.id === editingPool.id; })[0];
+  if (!p) return null;
+  var t = $('#peT').value.trim();
+  if (t) p.t = t.slice(0, 100);
+  p.due = isKey($('#peDue').value) ? $('#peDue').value : '';
+  p.cat = editingPool.cat;
+  p.note = $('#peNote').value.trim();
+  return p;
+}
+function addPool() {
+  var inp = $('#poolT');
+  var t = (inp.value || '').trim();
+  if (!t) { inp.focus(); return; }
+  var due = $('#poolDue').value;
+  S.pool.push({ id: uid(), t: t.slice(0, 100), due: isKey(due) ? due : '', done: false, cat: guessCat(t), note: '', created: Date.now(), doneAt: null, from: '' });
+  save(); render();
+  var ni = $('#poolT'); if (ni) ni.focus();
+}
+
+/* ---------- 心得 ---------- */
+function openReviewEdit(k) {
+  var d = getDay(k);
+  openSheet('<div class="grab"></div><div class="sh-h bar"><button class="txt-btn" data-a="close">取消</button><h2>心得<small>' + dayLabel(k) + '</small></h2>' +
+    '<button class="txt-btn strong" data-a="review-save" data-date="' + k + '">保存</button></div>' +
+    '<textarea class="inp" id="rvText" rows="4" maxlength="200" placeholder="这一天怎么样？">' + esc(d.review) + '</textarea>');
+}
+
+/* ======================= 设置、导入导出 ======================= */
+function effColor(i) {
+  var c = S.cats[i];
+  if (c.color) return c.color;
+  var v = getComputedStyle(document.documentElement).getPropertyValue('--c' + i).trim();
+  return /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : '#888888';
+}
+function openSettings() { openSheet(settingsHTML()); }
+function settingsHTML() {
+  var st = S.settings;
+  function seg(name, opts, cur) {
+    return '<div class="seg">' + opts.map(function (o) {
+      return '<button class="chip" data-a="set" data-k="' + name + '" data-v="' + o[0] + '" aria-pressed="' + (String(cur) === String(o[0])) + '">' + o[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  function hourOpts(from, to, cur) {
+    var h = '';
+    for (var x = from; x <= to; x++) h += '<option value="' + (x * 60) + '"' + (cur === x * 60 ? ' selected' : '') + '>' + pad(x) + ':00</option>';
+    return h;
+  }
+  var wakeOpts = '';
+  for (var m = Math.max(st.dayStart, 300); m <= Math.min(660, st.dayEnd - 60); m += 15) wakeOpts += '<option value="' + m + '"' + (st.wake === m ? ' selected' : '') + '>' + fmt(m) + '</option>';
+  var planOpts = '';
+  for (var h = 18; h <= 23; h++) planOpts += '<option value="' + h + '"' + (st.planHour === h ? ' selected' : '') + '>' + h + ':00</option>';
+  var last = S.meta.lastBackup ? '上次备份：' + dayLabel(dkey(new Date(S.meta.lastBackup))) : '还没有备份过';
+  return '<div class="grab"></div><div class="sh-h"><h2>设置</h2><button class="icon-btn" data-a="close" aria-label="关闭">' + ICON.x + '</button></div>' +
+    '<div class="sec"><div class="sec-h">时间</div>' +
+    '<div class="row"><span>刻度尺每格</span>' + seg('unit', [[5, '5 分钟'], [10, '10 分钟'], [15, '15 分钟'], [30, '30 分钟']], st.unit) + '</div>' +
+    '<div class="row"><span>一天从</span><select class="inp sel" data-set="dayStart">' + hourOpts(4, 10, st.dayStart) + '</select><span>到</span>' +
+    '<select class="inp sel" data-set="dayEnd">' + hourOpts(20, 24, st.dayEnd) + '</select></div>' +
+    '<div class="row"><span>空白的一天从</span><select class="inp sel" data-set="wake">' + wakeOpts + '</select><span>开始排</span></div>' +
+    '<div class="row"><span>晚上</span><select class="inp sel" data-set="planHour">' + planOpts + '</select><span>以后打开直接进「明天」</span></div>' +
+    '<p class="fine">凌晨 4 点前打开，仍然算前一天的晚上，「明天」指的是你醒来的那一天。</p></div>' +
+    '<div class="sec"><div class="sec-h">显示</div>' +
+    '<div class="row"><span>主题</span>' + seg('theme', [['dark', '深色'], ['auto', '跟随系统'], ['light', '浅色']], st.theme) + '</div>' +
+    '<label class="row sw"><span>完成率按时长加权</span><input type="checkbox" data-set="weighted"' + (st.weighted ? ' checked' : '') + '></label>' +
+    '<p class="fine">打开时，3 小时的实验比 10 分钟的洗漱分量更重；关掉就每块一样重。</p></div>' +
+    '<div class="sec"><div class="sec-h">分类</div>' + S.cats.map(function (c, i) {
+      return '<div class="row cat"><input type="color" class="clr" data-cat-color="' + c.id + '" value="' + effColor(i) + '" aria-label="' + esc(c.name) + '的颜色">' +
+        '<input class="inp" data-cat-name="' + c.id + '" value="' + esc(c.name) + '" maxlength="8" aria-label="分类名"></div>';
+    }).join('') + '<button class="btn sm" data-a="cat-reset">恢复默认颜色</button></div>' +
+    '<div class="sec"><div class="sec-h">常用块<span>' + S.presets.length + ' 个 · 在「加一块」里勾选「存为常用块」就能添加</span></div><div class="plist2">' +
+    S.presets.map(function (p, i) {
+      return '<div class="prow2" style="--c:' + catColor(p.cat) + '"><i class="dot"></i><span class="pn">' + esc(p.title) + '</span><span class="pd num">' + durLabel(p.dur) +
+        '</span><button class="icon-btn sm" data-a="preset-del" data-i="' + i + '" aria-label="删除' + esc(p.title) + '">' + ICON.x + '</button></div>';
+    }).join('') + '</div></div>' +
+    '<div class="sec"><div class="sec-h">数据<span>' + last + '</span></div><div class="stack">' +
+    '<button class="btn" data-a="export">导出备份（JSON）</button>' +
+    '<button class="btn" data-a="import">导入备份或以前的记录</button>' +
+    '<button class="btn" data-a="export-csv">导出表格（CSV，Excel 能打开）</button>' +
+    '<label class="row sw"><span>每 7 天提醒备份</span><input type="checkbox" data-set="backupRemind"' + (st.backupRemind ? ' checked' : '') + '></label>' +
+    '<button class="btn danger wide" data-a="wipe">清空全部数据</button></div>' +
+    '<p class="fine">数据只存在这台手机的这个网页里，不会上传到任何地方。删掉主屏幕图标或清除 Safari 网站数据会把它一起删掉，所以记得定期导出备份。</p></div>' +
+    '<p class="fine c">睡前日程 · 第 1 版</p>';
+}
+function refreshSettings() {
+  var sh = $('#sheet'), top = sh.scrollTop;
+  sh.innerHTML = settingsHTML(); sh.scrollTop = top;
+}
+function setSetting(k, v) {
+  var st = S.settings;
+  if (k === 'unit') st.unit = +v;
+  else if (k === 'theme') st.theme = v;
+  else if (k === 'dayStart') st.dayStart = +v;
+  else if (k === 'dayEnd') st.dayEnd = +v;
+  else if (k === 'wake') st.wake = +v;
+  else if (k === 'planHour') st.planHour = +v;
+  else if (k === 'weighted') st.weighted = !!v;
+  else if (k === 'backupRemind') st.backupRemind = !!v;
+  S.settings = normSettings(st);
+  save(); render();
+}
+
+function stamp() { var d = new Date(); return dkey(d) + '-' + pad(d.getHours()) + pad(d.getMinutes()); }
+function shareOrDownload(name, text, type) {
+  var blob = new Blob([text], { type: type });
+  var file = null;
+  try { file = new File([blob], name, { type: type }); } catch (e) { file = null; }
+  if (isIOS() && file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    return navigator.share({ files: [file], title: name }).then(function () { return true; }, function (e) {
+      if (e && e.name === 'AbortError') return false;
+      return download(blob, name);
+    });
+  }
+  return Promise.resolve(download(blob, name));
+}
+function download(blob, name) {
+  try {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1500);
+    return true;
+  } catch (e) { toast('导出失败了'); return false; }
+}
+function exportJSON() {
+  var data = { app: 'sleep-plan', v: 1, exportedAt: new Date().toISOString(), settings: S.settings, cats: S.cats, presets: S.presets, days: S.days, pool: S.pool };
+  shareOrDownload('sleep-plan-backup-' + stamp() + '.json', JSON.stringify(data, null, 1), 'application/json').then(function (ok) {
+    if (ok) { S.meta.lastBackup = Date.now(); save(); render(); if (sheetOpen() && $('.sec')) refreshSettings(); toast('已导出备份'); }
+  });
+}
+function csvCell(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function exportCSV() {
+  var rows = [['日期', '开始', '结束', '安排', '分类', '备注', '完成情况']];
+  Object.keys(S.days).sort().forEach(function (k) {
+    S.days[k].blocks.slice().sort(byStart).forEach(function (b) {
+      rows.push([k, fmt(b.start), fmt(b.end), b.title, catOf(b.cat).name, b.note, b.done == null ? '' : b.done]);
+    });
+  });
+  var text = '﻿' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+  shareOrDownload('sleep-plan-' + stamp() + '.csv', text, 'text/csv').then(function (ok) { if (ok) toast('已导出表格'); });
+}
+function openImport() {
+  openSheet('<div class="grab"></div><div class="sh-h"><h2>导入</h2><button class="icon-btn" data-a="close" aria-label="关闭">' + ICON.x + '</button></div>' +
+    '<p class="muted" style="margin:0 0 14px;font-size:14px">选择之前导出的备份，或者整理好的记录文件（.json）。文件里有的日子会覆盖这里同一天的安排，其他日子不受影响。</p>' +
+    '<input type="file" id="impFile" accept=".json,application/json,text/plain" style="display:none">' +
+    '<button class="btn primary wide" data-a="imp-pick">选择文件</button>' +
+    '<div class="sub-lab">或者把备份内容粘贴到这里</div><textarea class="inp" id="impText" rows="4" placeholder="{&quot;days&quot;: …}"></textarea>' +
+    '<div class="btns"><button class="btn" data-a="imp-paste">导入粘贴的内容</button></div>', function () {
+    $('#impFile').addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () { importText(String(rd.result || '')); };
+      rd.onerror = function () { toast('读不了这个文件'); };
+      rd.readAsText(f);
+    });
+  });
+}
+function importText(text) {
+  var d;
+  try { d = JSON.parse(String(text).replace(/^﻿/, '')); } catch (e) { toast('这不是有效的备份文件'); return; }
+  if (!d || typeof d !== 'object' || !d.days || typeof d.days !== 'object') { toast('文件里没有找到日程'); return; }
+  var dates = Object.keys(d.days).filter(isKey);
+  var days = {};
+  dates.forEach(function (k) { var day = normDay(d.days[k]); if (day && (day.blocks.length || day.review)) days[k] = day; });
+  dates = Object.keys(days).sort();
+  var pool = Array.isArray(d.pool) ? d.pool.map(normPool).filter(Boolean) : [];
+  var presets = Array.isArray(d.presets) ? d.presets.map(normPreset).filter(Boolean) : [];
+  var overwrite = dates.filter(function (k) { return S.days[k] && S.days[k].blocks.length; });
+  var poolIds = S.pool.map(function (p) { return p.id; });
+  var newPool = pool.filter(function (p) { return poolIds.indexOf(p.id) < 0; });
+  var titles = S.presets.map(function (p) { return p.title; });
+  var newPresets = presets.filter(function (p) { return titles.indexOf(p.title) < 0; });
+  if (!dates.length && !newPool.length && !newPresets.length) { toast('文件里没有新内容'); return; }
+  var msg = '将导入 ' + dates.length + ' 天的日程' + (dates.length ? '（' + shortLabel(dates[0]) + ' 到 ' + shortLabel(dates[dates.length - 1]) + '）' : '') +
+    (overwrite.length ? '，其中 ' + overwrite.length + ' 天会覆盖现有内容' : '') +
+    (newPool.length ? '，' + newPool.length + ' 条待办' : '') + (newPresets.length ? '，' + newPresets.length + ' 个常用块' : '') +
+    (d.settings ? '，以及文件里的设置' : '') + '。继续吗？';
+  if (!confirm(msg)) return;
+  snap();
+  dates.forEach(function (k) { S.days[k] = days[k]; });
+  S.pool = S.pool.concat(newPool);
+  S.presets = S.presets.concat(newPresets);
+  if (d.settings) S.settings = normSettings(d.settings);
+  if (Array.isArray(d.cats)) S.cats = normCats(d.cats);
+  save(); closeSheet();
+  if (dates.length) { view = 'review'; dayView = null; }
+  render(); window.scrollTo(0, 0);
+  toast('导入好了：' + dates.length + ' 天' + (newPresets.length ? '，' + newPresets.length + ' 个常用块' : ''), true);
+}
+
+/* ======================= 提示条 ======================= */
+var toastTimer = 0;
+function hideToast() {
+  var t = $('#toast');
+  clearTimeout(toastTimer);
+  t.classList.remove('show');
+  t.hidden = true;
+}
+function toast(msg, undoable) {
+  var t = $('#toast');
+  t.innerHTML = '<span>' + esc(msg) + '</span>' + (undoable && undoSnap ? '<button data-a="undo">撤销</button>' : '');
+  t.hidden = false;
+  requestAnimationFrame(function () { t.classList.add('show'); });
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    t.classList.remove('show');
+    setTimeout(function () { if (!t.classList.contains('show')) t.hidden = true; }, 250);
+  }, undoable ? 5000 : 2600);
+}
+
+/* ======================= 点击处理 ======================= */
+function curDate() { return view === 'tomorrow' ? tomorrow() : view === 'day' ? dayView : today(); }
+function num(v) { return v === undefined || v === null || v === '' ? null : Number(v); }
+var H = {
+  tab: function (el) { closeSheet(); view = el.dataset.v; dayView = null; render(); window.scrollTo(0, 0); if (view === 'today') scrollToNow(); },
+  back: function () { view = 'review'; dayView = null; render(); window.scrollTo(0, 0); },
+  settings: function () { openSettings(); },
+  close: function () { closeSheet(); },
+  fab: function () { openEditor({ date: curDate() }); },
+  'hint-off': function () { S.meta.hintOff = true; save(); render(); },
+  block: function (el) { var k = el.dataset.date; if (k > today()) openEditor({ date: k, id: el.dataset.id }); else openScore(k, el.dataset.id); },
+  add: function (el) { openEditor({ date: el.dataset.date, start: num(el.dataset.start), end: num(el.dataset.end) }); },
+  edit: function (el) { openEditor({ date: el.dataset.date, id: el.dataset.id }); },
+  score: function (el) { var b = findBlock(el.dataset.date, el.dataset.id); if (!b) return; b.done = +el.dataset.v; if (b.done >= 1) { delete b.carry; delete b.carryDone; } save(); closeSheet(); render(); },
+  'score-clear': function (el) { var b = findBlock(el.dataset.date, el.dataset.id); if (!b) return; b.done = null; delete b.carry; delete b.carryDone; save(); closeSheet(); render(); },
+  'ed-preset': function (el) {
+    var p = S.presets[+el.dataset.i]; if (!p || !ed) return;
+    ed.title = p.title; $('#edTitle').value = p.title; ed.cat = p.cat; ed.catTouched = true; syncCats();
+    if (!ed.id) { setDur(p.dur); rDur.set(ed.dur); }
+    updEd();
+  },
+  'ed-pool': function (el) {
+    var p = S.pool.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!p || !ed) return;
+    if (ed.fromPool === p.id) { ed.fromPool = null; }
+    else {
+      ed.fromPool = p.id; ed.title = p.t; $('#edTitle').value = p.t;
+      if (p.cat) { ed.cat = p.cat; ed.catTouched = true; } else if (!ed.catTouched) { ed.cat = guessCat(p.t) || ed.cat; }
+      if (p.note && !$('#edNote').value) { ed.note = p.note; $('#edNote').value = p.note; }
+      syncCats();
+    }
+    $$('[data-a="ed-pool"]').forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.id === ed.fromPool)); });
+  },
+  'ed-cat': function (el) { if (!ed) return; ed.cat = el.dataset.id; ed.catTouched = true; syncCats(); },
+  'ed-score': function (el) { if (!ed) return; ed.done = el.dataset.v === '' ? null : +el.dataset.v; $$('#edScore .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === el)); }); },
+  'ed-step': function (el) { var r = el.dataset.k === 'start' ? rStart : rDur; if (r) r.nudge(+el.dataset.d); },
+  'ed-save': function () { if (ed) saveEditor(); },
+  'ed-del': function () { if (ed && ed.id) deleteBlock(ed.date, ed.id); },
+  'copy-day': function (el) { copyDay(el.dataset.from, el.dataset.to); },
+  'copy-go': function (el) { if (pendingCopy) { var f = pendingCopy; pendingCopy = null; f(el.dataset.mode); } },
+  'clear-day': function (el) { clearDay(el.dataset.date); },
+  wrap: function () { openWrap(); },
+  'wrap-score': function (el) {
+    var b = findBlock(el.dataset.date, el.dataset.id); if (!b) return;
+    b.done = +el.dataset.v;
+    if (b.done >= 1) { delete b.carry; delete b.carryDone; }
+    save(); render(); renderWrap(false);
+  },
+  'wrap-carry': function (el) {
+    var b = findBlock(today(), el.dataset.id); if (!b) return;
+    if (b.carry === el.dataset.v) delete b.carry; else b.carry = el.dataset.v;
+    save(); renderWrap(false);
+  },
+  'wrap-done': function () { finishWrap(); },
+  'pool-toggle': function (el) {
+    var p = S.pool.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!p) return;
+    p.done = !p.done; p.doneAt = p.done ? Date.now() : null; save(); render();
+  },
+  'pool-edit': function (el) { openPoolEdit(el.dataset.id); },
+  'pe-cat': function (el) {
+    if (!editingPool) return;
+    editingPool.cat = editingPool.cat === el.dataset.id ? null : el.dataset.id;
+    $$('#peCats .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.id === editingPool.cat)); });
+  },
+  'pool-save': function () { if (applyPoolEdit()) { save(); closeSheet(); render(); } },
+  'pool-del': function () {
+    if (!editingPool) return;
+    var id = editingPool.id, p = S.pool.filter(function (x) { return x.id === id; })[0];
+    snap(); S.pool = S.pool.filter(function (x) { return x.id !== id; }); save(); closeSheet(); render();
+    if (p) toast('已删除「' + trunc(p.t, 10) + '」', true);
+  },
+  'pool-plan': function (el) {
+    var edited = applyPoolEdit(); if (edited) save();
+    var p = S.pool.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!p) return;
+    openEditor({ date: tomorrow(), title: p.t, cat: p.cat, note: p.note, fromPool: p.id });
+  },
+  'pool-clear-done': function () { snap(); S.pool = S.pool.filter(function (p) { return !p.done; }); save(); render(); toast('已清掉已完成的待办', true); },
+  'open-day': function (el) { closeSheet(); view = 'day'; dayView = el.dataset.date; render(); window.scrollTo(0, 0); },
+  'review-edit': function (el) { openReviewEdit(el.dataset.date); },
+  'review-save': function (el) { var d = getDay(el.dataset.date, true); d.review = $('#rvText').value.trim(); save(); closeSheet(); render(); },
+  set: function (el) {
+    setSetting(el.dataset.k, el.dataset.v);
+    $$('[data-a="set"][data-k="' + el.dataset.k + '"]').forEach(function (c) { c.setAttribute('aria-pressed', String(c === el)); });
+    if (el.dataset.k === 'theme') refreshSettings();
+  },
+  'cat-reset': function () { S.cats.forEach(function (c) { c.color = null; }); save(); render(); refreshSettings(); },
+  'preset-del': function (el) { S.presets.splice(+el.dataset.i, 1); save(); refreshSettings(); },
+  export: function () { exportJSON(); },
+  'export-csv': function () { exportCSV(); },
+  import: function () { openImport(); },
+  'imp-pick': function () { $('#impFile').click(); },
+  'imp-paste': function () { importText($('#impText').value); },
+  wipe: function () {
+    if (!confirm('清空全部数据？这一步不能撤销，建议先导出备份。')) return;
+    if (!confirm('真的要清空吗？')) return;
+    S = defaults(); undoSnap = null; save(); closeSheet(); view = pickTab(); render(); toast('已清空');
+  },
+  undo: function () {
+    if (!undoSnap) return;
+    try { var d = JSON.parse(undoSnap); S = d; } catch (e) { return; }
+    undoSnap = null; save(); closeSheet(); render(); toast('已撤销');
+  }
+};
+
+function scrollToNow() {
+  var el = $('.card.now') || $('.gap.has-now') || $('.nowline');
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+}
+function pickTab() { var h = new Date().getHours(); return (h >= S.settings.planHour || h < BOUNDARY_H) ? 'tomorrow' : 'today'; }
+
+function init() {
+  var nj = document.getElementById('nojs'); if (nj) nj.remove();
+  load();
+  $('#fab').innerHTML = ICON.plus;
+  $('#tabs').innerHTML =
+    '<button data-a="tab" data-v="today">' + ICON.sun + '<span>今天</span></button>' +
+    '<button data-a="tab" data-v="tomorrow">' + ICON.moon + '<span>明天</span></button>' +
+    '<button data-a="tab" data-v="pool">' + ICON.list + '<span>待办</span><b class="badge" id="poolBadge"></b></button>' +
+    '<button data-a="tab" data-v="review">' + ICON.chart + '<span>复盘</span></button>';
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-a]') : null;
+    if (!el || el.disabled) return;
+    var f = H[el.dataset.a];
+    if (f) { e.preventDefault(); f(el, e); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('#sheetWrap').hidden) { closeSheet(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"][data-a]')) { e.preventDefault(); e.target.click(); }
+    if (e.key === 'Enter' && e.target.id === 'edTitle') { e.preventDefault(); e.target.blur(); }
+  });
+  document.addEventListener('submit', function (e) {
+    if (e.target.dataset && e.target.dataset.form === 'pool-add') { e.preventDefault(); addPool(); }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.dataset.set) setSetting(t.dataset.set, t.type === 'checkbox' ? t.checked : t.value);
+    else if (t.dataset.catColor) {
+      var c = S.cats.filter(function (x) { return x.id === t.dataset.catColor; })[0];
+      if (c && /^#[0-9a-f]{6}$/i.test(t.value)) { c.color = t.value.toLowerCase(); save(); render(); }
+    }
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.catName) {
+      var c = S.cats.filter(function (x) { return x.id === t.dataset.catName; })[0];
+      var def = DEFAULT_CATS.filter(function (x) { return x.id === t.dataset.catName; })[0];
+      if (c) { c.name = t.value.trim().slice(0, 8) || def.name; save(); render(); }
+    }
+  });
+  window.addEventListener('scroll', function () { $('#top').classList.toggle('scrolled', window.scrollY > 4); }, { passive: true });
+  window.addEventListener('resize', function () { if (rStart) rStart.place(); if (rDur) rDur.place(); });
+  var hiddenAt = 0;
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+    if (hiddenAt && Date.now() - hiddenAt > 30 * 60 * 1000 && $('#sheetWrap').hidden) { view = pickTab(); dayView = null; window.scrollTo(0, 0); }
+    if ($('#sheetWrap').hidden) render();
+  });
+  setInterval(function () {
+    if (document.visibilityState === 'visible' && view === 'today') render();
+  }, 60 * 1000);
+
+  view = pickTab();
+  render();
+  if (view === 'today') scrollToNow();
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* 离线缓存是锦上添花 */ });
+  }
+  if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(function () {}); }
+}
+
+init();
+})();
+</script>
+</body>
+</html>
