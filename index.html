@@ -205,13 +205,20 @@ input[type="date"].inp{display:block;min-width:0;line-height:44px}
 
 /* 时间刻度尺 */
 .timebox{text-align:center;margin-top:14px}
-.timebox .big{font-size:30px;font-weight:700;letter-spacing:.5px}
+.timebox .big{font-size:30px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:4px}
+/* 看得见的是自己排的 24 小时制时间；上面盖一层透明的原生时间框，点一下弹出 iPhone 的时间滚轮 */
+.tpick{position:relative;display:inline-block;min-width:104px;min-height:46px;line-height:46px;padding:0 4px;border-bottom:2px dashed var(--line);cursor:pointer}
+.tpick:focus-within{border-bottom-color:var(--accent);color:var(--accent)}
+.tin{position:absolute;left:0;top:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;font-size:30px;
+  background:transparent;color:transparent;-webkit-appearance:none;appearance:none}
+.timebox .tip2{font-size:12px;color:var(--muted)}
 .timebox .warn{font-size:13px;color:var(--danger);min-height:19px}
 .rl{margin-top:8px}
 .rl-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .rl-h .lab{font-size:13px;color:var(--muted);flex:1}
 .rl-h .val{font-size:17px;font-weight:600;min-width:84px;text-align:center}
-.step{width:44px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:20px;line-height:1;text-align:center}
+.step{width:44px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:20px;line-height:1;text-align:center;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .step:active{background:var(--line)}
 .ruler{position:relative;height:62px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);overflow:hidden;
   touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:grab;outline:none}
@@ -219,15 +226,16 @@ input[type="date"].inp{display:block;min-width:0;line-height:44px}
 .ruler .track{position:absolute;top:0;bottom:0;left:0;will-change:transform}
 .ruler .ticks{position:absolute;left:0;right:0;bottom:0;height:22px;
   background-image:repeating-linear-gradient(to right,var(--text2) 0 1.5px,transparent 1.5px var(--major)),
+                   repeating-linear-gradient(to right,var(--muted) 0 1px,transparent 1px var(--mid)),
                    repeating-linear-gradient(to right,var(--muted) 0 1px,transparent 1px var(--minor));
-  background-size:100% 20px,100% 10px;background-position:0 100%,0 100%;background-repeat:no-repeat;opacity:.8}
+  background-size:100% 20px,100% 14px,100% 8px;background-position:0 100%,0 100%,0 100%;background-repeat:no-repeat;opacity:.8}
 .ruler .lbl{position:absolute;top:5px;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ruler .band{position:absolute;top:22px;height:10px;border-radius:3px;background:var(--c);opacity:.75}
 .ruler .off{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(140,140,150,.18) 6px 9px)}
 .ruler .self{position:absolute;left:50%;top:19px;height:16px;border-radius:4px;background:var(--accent);opacity:.35;pointer-events:none}
-.ruler .center{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none}
-.ruler .center::before{content:"";position:absolute;top:0;left:-5px;border:6px solid transparent;border-top-color:var(--accent)}
-.hint{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+.ruler .center{position:absolute;left:50%;top:20px;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none}
+.ruler .center::before{content:"";position:absolute;top:-20px;left:-5px;border:6px solid transparent;border-top-color:var(--accent)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;text-align:center;text-wrap:balance}
 
 /* 收尾 */
 .wrow{padding:12px 0;border-top:1px solid var(--line)}
@@ -331,7 +339,9 @@ details.pdone .btn{margin-top:10px}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(var(--tabh) + 84px + env(safe-area-inset-bottom));z-index:60;
   display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:14px;background:var(--text);color:var(--bg);
   font-size:14px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
-.toast.show{opacity:1;transform:none;pointer-events:auto}
+.toast.show.has-undo{pointer-events:auto}
+html.lock .toast{top:calc(env(safe-area-inset-top) + 8px);bottom:auto}
+.toast.show{opacity:1;transform:none}
 .toast[hidden]{display:none}
 .toast span{flex:1}
 .toast button{color:var(--accent);font-weight:700;min-height:36px;padding:0 10px;filter:saturate(1.2)}
@@ -438,7 +448,7 @@ var DEFAULT_PRESETS = [
   { title: '运动', cat: 'sport', dur: 60 },
   { title: '次日日程安排', cat: 'life', dur: 10 }
 ];
-var DEF_SETTINGS = { unit: 5, dayStart: 360, dayEnd: 1440, wake: 420, planHour: 21, theme: 'dark', weighted: true, backupRemind: true };
+var DEF_SETTINGS = { unit: 1, dayStart: 360, dayEnd: 1440, wake: 420, planHour: 21, theme: 'dark', weighted: true, backupRemind: true };
 // 按标题猜分类（顺序有讲究：先认「报告」「作业」，再认「课」「实验」）
 var CAT_RULES = [
   ['hw', ['作业', '报告', '预习', '复习', '抄写', '学习资料', '论文', '笔记', '背单词', '刷题', '习题', '整理资料']],
@@ -464,14 +474,14 @@ function defaults() {
     presets: DEFAULT_PRESETS.map(function (p) { return Object.assign({}, p); }),
     days: {},
     pool: [],
-    meta: { created: Date.now(), lastBackup: null, hintOff: false }
+    meta: { created: Date.now(), lastBackup: null, hintOff: false, sv: 2 }
   };
 }
 function normBlock(b) {
   if (!b || typeof b !== 'object') return null;
   var s = Math.round(Number(b.start)), e = Math.round(Number(b.end));
   if (!isFinite(s) || !isFinite(e)) return null;
-  s = clamp(s, 0, 1435);
+  s = clamp(s, 0, 1439);
   e = clamp(e, s + 1, 1440);
   var title = String(b.title == null ? '' : b.title).trim().slice(0, 100);
   if (!title) return null;
@@ -510,7 +520,7 @@ function normPreset(p) {
 function normSettings(s) {
   var o = Object.assign({}, DEF_SETTINGS);
   if (!s || typeof s !== 'object') return o;
-  if ([5, 10, 15, 30].indexOf(+s.unit) >= 0) o.unit = +s.unit;
+  if ([1, 5, 10, 15, 30].indexOf(+s.unit) >= 0) o.unit = +s.unit;
   if (+s.dayStart >= 240 && +s.dayStart <= 600 && +s.dayStart % 60 === 0) o.dayStart = +s.dayStart;
   if (+s.dayEnd >= 1200 && +s.dayEnd <= 1440 && +s.dayEnd % 60 === 0) o.dayEnd = +s.dayEnd;
   if (+s.wake >= 0 && +s.wake <= 1440) o.wake = Math.round(+s.wake);
@@ -546,7 +556,12 @@ function load() {
       Object.keys(d.days).forEach(function (k) { if (isKey(k)) { var day = normDay(d.days[k]); if (day) S.days[k] = day; } });
     }
     if (Array.isArray(d.pool)) S.pool = d.pool.map(normPool).filter(Boolean);
+    var oldSv = (d.meta && d.meta.sv) || 1;
     if (d.meta && typeof d.meta === 'object') S.meta = Object.assign(S.meta, d.meta);
+    // 第 1 版默认每格 5 分钟；第 2 版起默认 1 分钟
+    if (oldSv < 2 && S.settings.unit === 5) S.settings.unit = 1;
+    S.meta.sv = 2;
+    if (oldSv < 2) { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e2) { /* 存不了就下次再说 */ } }
   } catch (e) { console.warn('读取数据失败', e); }
 }
 var saveWarned = false;
@@ -1024,12 +1039,16 @@ function editorHTML() {
     '<label class="field" style="margin-top:4px"><span class="lab">做什么</span><input class="inp" id="edTitle" maxlength="40" placeholder="比如：概率论作业" value="' + esc(ed.title) + '" autocomplete="off" enterkeyhint="done"></label>' +
     (presets ? '<div class="sub-lab">常用</div><div class="chips scroll">' + presets + '</div>' : '') +
     (pool ? '<div class="sub-lab">从待办池里挑</div><div class="chips scroll">' + pool + '</div>' : '') +
-    '<div class="timebox"><div class="big num" id="edBig"></div><div class="warn" id="edWarn"></div></div>' +
+    '<div class="timebox"><div class="big num" id="edBig">' +
+    '<label class="tpick"><span id="edSv"></span><input type="time" class="tin" id="edS" step="60" aria-label="开始时间"></label>' +
+    '<span>–</span>' +
+    '<label class="tpick"><span id="edEv"></span><input type="time" class="tin" id="edE" step="60" aria-label="结束时间"></label></div>' +
+    '<div class="tip2">点时间可以直接输入</div><div class="warn" id="edWarn"></div></div>' +
     '<div class="rl"><div class="rl-h"><span class="lab">开始</span><button class="step" data-a="ed-step" data-k="start" data-d="-1" aria-label="早一格">−</button>' +
     '<span class="val num" id="edStartV"></span><button class="step" data-a="ed-step" data-k="start" data-d="1" aria-label="晚一格">+</button></div><div class="ruler" id="rStart" tabindex="0" role="slider" aria-label="开始时间"></div></div>' +
     '<div class="rl"><div class="rl-h"><span class="lab">时长</span><button class="step" data-a="ed-step" data-k="dur" data-d="-1" aria-label="短一格">−</button>' +
     '<span class="val num" id="edDurV"></span><button class="step" data-a="ed-step" data-k="dur" data-d="1" aria-label="长一格">+</button></div><div class="ruler" id="rDur" tabindex="0" role="slider" aria-label="时长"></div></div>' +
-    '<div class="hint">左右拖动刻度尺，每格 ' + S.settings.unit + ' 分钟；点刻度可以直接跳过去</div>' +
+    '<div class="hint">左右拖动刻度尺，每格 ' + S.settings.unit + ' 分钟<br>点刻度直接跳过去，按住 ＋ − 连续调</div>' +
     '<div class="sub-lab">分类</div><div class="chips" id="edCats">' + cats + '</div>' +
     '<label class="field"><span class="lab">备注（顺带做的事、注意事项）</span><textarea class="inp" id="edNote" rows="2" maxlength="200" placeholder="比如：上班时顺便写电工电子作业">' + esc(ed.note) + '</textarea></label>' +
     (canScore ? '<div class="sub-lab">完成情况</div><div class="chips score" id="edScore">' + scoreChips(ed.done, 'ed-score', true) + '</div>' : '') +
@@ -1052,7 +1071,68 @@ function mountEditor() {
   var rp = $('#edRipple');
   if (rp) rp.addEventListener('change', function (e) { ed.ripple = e.target.checked; rStart.setBands(edOthers()); updEd(); });
   $('#edPreset').addEventListener('change', function (e) { ed.savePreset = e.target.checked; });
-  updEd();
+
+  // 直接输入时间：iPhone 上会弹出时间滚轮，精确到 1 分钟。
+  // 滚轮一转就跟着变；不合法的值先不改回去，等收起滚轮（失去焦点）时再提示，免得和手指「打架」
+  var sIn = $('#edS'), eIn = $('#edE');
+  function typedEnd() { var m = parseT(eIn.value); return m === 0 ? 1440 : m; }   // 00:00 当作当天 24:00
+  function maxEnd() { return Math.min(ed.start + 480, st.dayEnd); }
+  function onStartTyped() {
+    var m = parseT(sIn.value);
+    if (m == null) return;
+    setStart(clamp(m, st.dayStart, st.dayEnd - u));
+    rStart.set(ed.start);
+  }
+  function onEndTyped() {
+    var m = typedEnd();
+    if (m == null) return;
+    if (m <= ed.start) { $('#edWarn').textContent = '结束时间要晚于开始时间 ' + fmt(ed.start); return; }
+    setDur(m - ed.start);
+    rDur.set(ed.dur);
+  }
+  ['input', 'change'].forEach(function (t) {
+    sIn.addEventListener(t, onStartTyped);
+    eIn.addEventListener(t, onEndTyped);
+  });
+  sIn.addEventListener('blur', function () {
+    if (!sIn.isConnected) return;
+    var m = parseT(sIn.value);
+    if (m != null && (m < st.dayStart || m > st.dayEnd - u)) toast('只能排在 ' + fmt(st.dayStart) + '–' + fmt(st.dayEnd) + ' 之间，可以在设置里改');
+    updEd(true);
+  });
+  eIn.addEventListener('blur', function () {
+    if (!eIn.isConnected) return;
+    var m = typedEnd();
+    if (m != null && m <= ed.start) toast('结束时间要晚于开始时间');
+    else if (m != null && m > maxEnd()) toast(m > st.dayEnd ? '一天到 ' + fmt(st.dayEnd) + ' 结束，可以在设置里改' : '一块最长 8 小时');
+    updEd(true);
+  });
+
+  // 按住 ＋/− 连续调，越按越快
+  $$('#sheet .step').forEach(function (btn) {
+    var timer = 0, count = 0;
+    function stop() { clearTimeout(timer); timer = 0; }
+    btn.addEventListener('pointerdown', function () {
+      stop(); count = 0; btn.dataset.held = '';
+      var d = +btn.dataset.d;
+      function again() {
+        var r = btn.dataset.k === 'start' ? rStart : rDur;
+        if (!r) return;
+        count++; btn.dataset.held = '1';
+        var mul = u === 1 ? (count > 24 ? 15 : count > 8 ? 5 : 1) : (count > 12 ? 3 : 1);
+        r.nudge(d * mul, true);
+        timer = setTimeout(again, count > 8 ? 70 : 110);
+      }
+      timer = setTimeout(again, 380);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (t) { btn.addEventListener(t, stop); });
+    btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  });
+  updEd(true);
+}
+function parseT(v) {
+  var m = /^(\d{1,2}):(\d{2})/.exec(v || '');
+  return m ? (+m[1]) * 60 + (+m[2]) : null;
 }
 // 紧挨在这一块后面的一串：开始时间正好等于前一块结束时间，中间没有空当
 function chainIds(blocks, selfId, oldEnd) {
@@ -1089,10 +1169,14 @@ function setDur(v) {
   if (ed.id && ed.ripple) rStart.setBands(edOthers());
   updEd();
 }
-function updEd() {
+function updEd(force) {
   if (!ed || !$('#edBig')) return;
   var s = ed.start, e = ed.start + ed.dur;
-  $('#edBig').textContent = fmt(s) + ' – ' + fmt(e);
+  var sIn = $('#edS'), eIn = $('#edE');
+  if (force || document.activeElement !== sIn) sIn.value = fmt(s);
+  if (force || document.activeElement !== eIn) eIn.value = fmt(e % 1440);
+  $('#edSv').textContent = fmt(s);
+  $('#edEv').textContent = fmt(e);
   $('#edStartV').textContent = fmt(s);
   $('#edDurV').textContent = durLabel(ed.dur);
   if (rStart) rStart.setSelf(ed.dur);
@@ -1118,8 +1202,8 @@ function saveEditor() {
       if (delta) day.blocks.forEach(function (x) {
         if (ed.chain.indexOf(x.id) >= 0) {
           var len = x.end - x.start;
-          x.start = clamp(x.start + delta, 0, 1435);
-          x.end = clamp(x.start + len, x.start + 5, 1440);
+          x.start = clamp(x.start + delta, 0, 1439);
+          x.end = clamp(x.start + len, x.start + 1, 1440);
         }
       });
     }
@@ -1152,19 +1236,21 @@ function deleteBlock(k, id) {
 function durShort(v) {
   if (v === 0) return '0';
   if (v < 60) return v + '分';
-  return v % 60 ? (v / 60).toFixed(1).replace('.0', '') + '小时' : (v / 60) + '小时';
+  return v % 60 ? Math.floor(v / 60) + '时' + (v % 60) + '分' : (v / 60) + '小时';
 }
 function Ruler(el, o) {
-  var step = o.step, ppm = SP / step;               // 每分钟多少像素
+  var step = o.step;
+  var ppm = (step === 1 ? 6 : SP) / step;           // 每分钟多少像素：1 分钟一格时每格 6 像素
   var span = (o.max - o.min) * ppm;
-  var cands = o.kind === 'time' ? [60, 120, 180] : [30, 60, 120];
-  var li = cands.filter(function (c) { return c * ppm >= 46; })[0] || cands[cands.length - 1];
+  var cands = o.kind === 'time' ? [15, 30, 60, 120, 180] : [5, 10, 15, 30, 60, 120];
+  var li = cands.filter(function (c) { return c % step === 0 && c * ppm >= 64; })[0] || cands[cands.length - 1];
+  var mid = (step < 5 && li > 5) ? 5 : li;          // 1 分钟一格时，每 5 分钟一根中等刻度
   var labels = '';
   for (var v = o.min; v <= o.max; v += li) {
     labels += '<span class="lbl" style="left:' + ((v - o.min) * ppm) + 'px">' + (o.kind === 'time' ? fmt(v) : durShort(v)) + '</span>';
   }
   el.innerHTML = '<div class="track" style="width:' + (span + 2) + 'px"><div class="off off-l"></div><div class="off off-r"></div><div class="bands"></div>' +
-    '<div class="ticks" style="--minor:' + SP + 'px;--major:' + (li * ppm) + 'px"></div>' + labels + '</div>' +
+    '<div class="ticks" style="--minor:' + (step * ppm) + 'px;--mid:' + (mid * ppm) + 'px;--major:' + (li * ppm) + 'px"></div>' + labels + '</div>' +
     (o.kind === 'time' ? '<div class="self"></div>' : '') + '<div class="center"></div>';
   var track = $('.track', el), self = $('.self', el), offL = $('.off-l', el), offR = $('.off-r', el), bandsEl = $('.bands', el);
   var pos = o.value, lo = o.lo, hi = o.hi, raf = 0, last = o.value, drag = null;
@@ -1224,7 +1310,7 @@ function Ruler(el, o) {
     function tick(now) {                               // 松手后的惯性
       var t = Math.min(32, now - prev); prev = now;
       pos = cl(pos - vel * t / ppm);
-      vel *= Math.pow(0.93, t / 16);
+      vel *= Math.pow(0.95, t / 16);
       place(); emit();
       if (Math.abs(vel) > 0.03 && pos > lo && pos < hi) raf = requestAnimationFrame(tick); else settle();
     }
@@ -1247,9 +1333,11 @@ function Ruler(el, o) {
         return '<div class="band" style="left:' + ((b.start - o.min) * ppm + 1) + 'px;width:' + Math.max(3, (b.end - b.start) * ppm - 2) + 'px;--c:' + catColor(b.cat) + '"></div>';
       }).join('');
     },
-    nudge: function (n) {
-      var base = n > 0 ? Math.floor(pos / step + 1e-6) * step + step : Math.ceil(pos / step - 1e-6) * step - step;
-      animateTo(cl(base));
+    // 往前/往后挪 |n| 格，并对齐到 |n| 格的整数倍；instant 用于按住按钮连续调
+    nudge: function (n, instant) {
+      var q = step * Math.abs(n);
+      var target = cl(n > 0 ? (Math.floor(pos / q + 1e-6) + 1) * q : (Math.ceil(pos / q - 1e-6) - 1) * q);
+      if (instant) { cancelAnimationFrame(raf); pos = target; place(); emit(); } else animateTo(target);
     }
   };
   el.setAttribute('aria-valuemin', lo); el.setAttribute('aria-valuemax', hi); el.setAttribute('aria-valuenow', pos);
@@ -1332,7 +1420,8 @@ function finishWrap() {
     if (!(b.done != null && b.done < 1) || b.carryDone) return;
     if (b.carry === 'next') {
       var dur = b.end - b.start;
-      var rem = Math.max(u, Math.ceil(dur * (1 - b.done) / u) * u);
+      var ru = Math.max(u, 5);
+      var rem = Math.max(ru, Math.ceil(dur * (1 - b.done) / ru) * ru);
       var s = findSlot(td.blocks, b.start, rem);
       rem = Math.max(u, Math.min(rem, S.settings.dayEnd - s));
       td.blocks.push({ id: uid(), start: s, end: s + rem, title: b.title, cat: b.cat, note: b.note, done: null, from: k, fromDone: b.done });
@@ -1424,7 +1513,7 @@ function settingsHTML() {
   var last = S.meta.lastBackup ? '上次备份：' + dayLabel(dkey(new Date(S.meta.lastBackup))) : '还没有备份过';
   return '<div class="grab"></div><div class="sh-h"><h2>设置</h2><button class="icon-btn" data-a="close" aria-label="关闭">' + ICON.x + '</button></div>' +
     '<div class="sec"><div class="sec-h">时间</div>' +
-    '<div class="row"><span>刻度尺每格</span>' + seg('unit', [[5, '5 分钟'], [10, '10 分钟'], [15, '15 分钟'], [30, '30 分钟']], st.unit) + '</div>' +
+    '<div class="row"><span>刻度尺每格</span>' + seg('unit', [[1, '1 分钟'], [5, '5 分'], [10, '10 分'], [15, '15 分'], [30, '30 分']], st.unit) + '</div>' +
     '<div class="row"><span>一天从</span><select class="inp sel" data-set="dayStart">' + hourOpts(4, 10, st.dayStart) + '</select><span>到</span>' +
     '<select class="inp sel" data-set="dayEnd">' + hourOpts(20, 24, st.dayEnd) + '</select></div>' +
     '<div class="row"><span>空白的一天从</span><select class="inp sel" data-set="wake">' + wakeOpts + '</select><span>开始排</span></div>' +
@@ -1551,7 +1640,10 @@ function importText(text) {
   dates.forEach(function (k) { S.days[k] = days[k]; });
   S.pool = S.pool.concat(newPool);
   S.presets = S.presets.concat(newPresets);
-  if (d.settings) S.settings = normSettings(d.settings);
+  if (d.settings) {
+    S.settings = normSettings(d.settings);
+    if (!(d.meta && d.meta.sv >= 2) && S.settings.unit === 5) S.settings.unit = 1;   // 第 1 版的备份：那时默认每格 5 分钟
+  }
   if (Array.isArray(d.cats)) S.cats = normCats(d.cats);
   save(); closeSheet();
   if (dates.length) { view = 'review'; dayView = null; }
@@ -1569,7 +1661,9 @@ function hideToast() {
 }
 function toast(msg, undoable) {
   var t = $('#toast');
-  t.innerHTML = '<span>' + esc(msg) + '</span>' + (undoable && undoSnap ? '<button data-a="undo">撤销</button>' : '');
+  var canUndo = !!(undoable && undoSnap);
+  t.innerHTML = '<span>' + esc(msg) + '</span>' + (canUndo ? '<button data-a="undo">撤销</button>' : '');
+  t.classList.toggle('has-undo', canUndo);
   t.hidden = false;
   requestAnimationFrame(function () { t.classList.add('show'); });
   clearTimeout(toastTimer);
@@ -1613,7 +1707,10 @@ var H = {
   },
   'ed-cat': function (el) { if (!ed) return; ed.cat = el.dataset.id; ed.catTouched = true; syncCats(); },
   'ed-score': function (el) { if (!ed) return; ed.done = el.dataset.v === '' ? null : +el.dataset.v; $$('#edScore .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === el)); }); },
-  'ed-step': function (el) { var r = el.dataset.k === 'start' ? rStart : rDur; if (r) r.nudge(+el.dataset.d); },
+  'ed-step': function (el) {
+    if (el.dataset.held === '1') { el.dataset.held = ''; return; }   // 刚才是按住连续调，松手这一下不再多走一格
+    var r = el.dataset.k === 'start' ? rStart : rDur; if (r) r.nudge(+el.dataset.d);
+  },
   'ed-save': function () { if (ed) saveEditor(); },
   'ed-del': function () { if (ed && ed.id) deleteBlock(ed.date, ed.id); },
   'copy-day': function (el) { copyDay(el.dataset.from, el.dataset.to); },
